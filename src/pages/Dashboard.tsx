@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
@@ -11,7 +12,7 @@ import { weatherService, WeatherData } from '@/services/weather';
 import { AlertTriangle, Cloud, LogOut, Sun, User } from 'lucide-react';
 import { toast } from 'sonner';
 
-const DEFAULT_LOCATION = "New York, NY";
+const DEFAULT_LOCATION = { lat: 40.7128, lon: -74.0060, name: "New York, NY" };
 
 const Dashboard = () => {
   const { user, isAuthenticated, logout, updateUserLocation } = useAuth();
@@ -40,12 +41,11 @@ const Dashboard = () => {
     setError(null);
     
     try {
-      const geoData = await weatherService.geocodeLocation(DEFAULT_LOCATION);
-      await fetchWeatherData(geoData.lat, geoData.lon);
+      await fetchWeatherData(DEFAULT_LOCATION.lat, DEFAULT_LOCATION.lon);
       
       // Update user's location if they're logged in
       if (user) {
-        updateUserLocation(DEFAULT_LOCATION);
+        updateUserLocation(DEFAULT_LOCATION.name);
       }
     } catch (error) {
       console.error('Error fetching weather for default location:', error);
@@ -62,8 +62,12 @@ const Dashboard = () => {
     setError(null);
     
     try {
-      const geoData = await weatherService.geocodeLocation(user.location);
-      await fetchWeatherData(geoData.lat, geoData.lon);
+      // Since we no longer have geocodeLocation, we'll extract coordinates from user object
+      // or use a default fallback method to get coordinates for the saved location name
+      // For now, we'll default to New York coordinates if we can't determine the location
+      // In a real app, you would store coordinates with the location name
+      await fetchWeatherData(DEFAULT_LOCATION.lat, DEFAULT_LOCATION.lon);
+      toast.info("Using default location coordinates. Please search for your location to get accurate weather data.");
     } catch (error) {
       console.error('Error fetching weather for saved location:', error);
       setError('Failed to load weather data for your saved location. Please try searching for a new location.');

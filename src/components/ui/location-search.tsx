@@ -32,7 +32,7 @@ const LocationSearch: React.FC<LocationSearchProps> = ({ onLocationSelect, class
         return;
       }
       
-      // Use the NWS API to get location data from ZIP code
+      // Use the WeatherService to get location data from ZIP code
       const result = await weatherService.searchLocationsByZip(zipCode);
       onLocationSelect(result);
       toast.success(`Location set to ${result.name}`);
