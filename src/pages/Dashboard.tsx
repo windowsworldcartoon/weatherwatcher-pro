@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
@@ -11,6 +10,8 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { weatherService, WeatherData } from '@/services/weather';
 import { AlertTriangle, Cloud, LogOut, Sun, User } from 'lucide-react';
 import { toast } from 'sonner';
+
+const DEFAULT_LOCATION = "New York, NY";
 
 const Dashboard = () => {
   const { user, isAuthenticated, logout, updateUserLocation } = useAuth();
@@ -26,10 +27,33 @@ const Dashboard = () => {
     }
 
     // If user has a saved location, fetch weather for it
+    // Otherwise, use the default location
     if (user?.location) {
       fetchWeatherForSavedLocation();
+    } else {
+      fetchWeatherForDefaultLocation();
     }
   }, [isAuthenticated, navigate, user]);
+
+  const fetchWeatherForDefaultLocation = async () => {
+    setIsLoading(true);
+    setError(null);
+    
+    try {
+      const geoData = await weatherService.geocodeLocation(DEFAULT_LOCATION);
+      await fetchWeatherData(geoData.lat, geoData.lon);
+      
+      // Update user's location if they're logged in
+      if (user) {
+        updateUserLocation(DEFAULT_LOCATION);
+      }
+    } catch (error) {
+      console.error('Error fetching weather for default location:', error);
+      setError('Failed to load weather data for the default location. Please try searching for a location.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const fetchWeatherForSavedLocation = async () => {
     if (!user?.location) return;

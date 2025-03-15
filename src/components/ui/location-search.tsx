@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Search } from 'lucide-react';
+import { Search, MapPin } from 'lucide-react';
 import { toast } from 'sonner';
 import { weatherService } from '@/services/weather';
 
@@ -97,6 +97,7 @@ const LocationSearch: React.FC<LocationSearchProps> = ({ onLocationSelect, class
         disabled={isSearching}
         className="w-full"
       >
+        <MapPin className="h-4 w-4 mr-2" />
         Use my current location
       </Button>
     </div>
