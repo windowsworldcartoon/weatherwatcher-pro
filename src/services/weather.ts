@@ -63,6 +63,7 @@ export interface WeatherData {
 
 class WeatherService {
   private baseUrl = 'https://api.weather.gov';
+  private geocodeApiKey = '67d4cc8097a52211831031wtnb222aa';
 
   async getPointData(lat: number, lon: number): Promise<WeatherPoint> {
     try {
@@ -127,9 +128,8 @@ class WeatherService {
 
   async geocodeLocation(locationQuery: string): Promise<{ lat: number; lon: number; name: string }> {
     try {
-      // We'll use a free geocoding service for demo purposes
-      // In a real application, you might want to use a more robust service
-      const response = await fetch(`https://geocode.maps.co/search?q=${encodeURIComponent(locationQuery)}`);
+      // Use the provided API key for geocoding
+      const response = await fetch(`https://geocode.maps.co/search?q=${encodeURIComponent(locationQuery)}&api_key=${this.geocodeApiKey}`);
       
       if (!response.ok) throw new Error('Failed to geocode location');
       
