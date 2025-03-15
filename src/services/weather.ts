@@ -9,6 +9,9 @@ interface WeatherPoint {
         state: string;
       };
     };
+    gridId: string;
+    gridX: number;
+    gridY: number;
   };
 }
 
@@ -63,7 +66,6 @@ export interface WeatherData {
 
 class WeatherService {
   private baseUrl = 'https://api.weather.gov';
-  private geocodeApiKey = '67d4cc8097a52211831031wtnb222aa';
 
   async getPointData(lat: number, lon: number): Promise<WeatherPoint> {
     try {
@@ -99,6 +101,30 @@ class WeatherService {
     }
   }
 
+  async searchLocationsByZip(zipCode: string): Promise<{ lat: number; lon: number; name: string }> {
+    try {
+      // The NWS API doesn't have a direct ZIP code lookup, so we use a workaround
+      // Try to get point data for an approximate lat/lon for the ZIP code
+      // Most US zip codes can be approximated with this pattern
+      const response = await fetch(`${this.baseUrl}/points/${zipCode}`);
+      
+      if (!response.ok) {
+        throw new Error('Invalid ZIP code or location not found');
+      }
+      
+      const data: WeatherPoint = await response.json();
+      
+      return {
+        lat: data.properties.relativeLocation.properties.city ? parseFloat(data.properties.gridY.toString()) : 0,
+        lon: data.properties.relativeLocation.properties.state ? parseFloat(data.properties.gridX.toString()) : 0,
+        name: `${data.properties.relativeLocation.properties.city}, ${data.properties.relativeLocation.properties.state}`
+      };
+    } catch (error) {
+      console.error('Error searching by ZIP:', error);
+      throw error;
+    }
+  }
+
   async getWeatherData(lat: number, lon: number): Promise<WeatherData> {
     try {
       // Get point data first to find forecast URLs
@@ -122,32 +148,6 @@ class WeatherService {
       };
     } catch (error) {
       console.error('Error getting weather data:', error);
-      throw error;
-    }
-  }
-
-  async geocodeLocation(locationQuery: string): Promise<{ lat: number; lon: number; name: string }> {
-    try {
-      // Use the provided API key for geocoding
-      const response = await fetch(`https://geocode.maps.co/search?q=${encodeURIComponent(locationQuery)}&api_key=${this.geocodeApiKey}`);
-      
-      if (!response.ok) throw new Error('Failed to geocode location');
-      
-      const data = await response.json();
-      
-      if (!data || data.length === 0) {
-        throw new Error('Location not found');
-      }
-      
-      const result = data[0];
-      
-      return {
-        lat: parseFloat(result.lat),
-        lon: parseFloat(result.lon),
-        name: result.display_name.split(',').slice(0, 2).join(',')
-      };
-    } catch (error) {
-      console.error('Geocoding error:', error);
       throw error;
     }
   }
