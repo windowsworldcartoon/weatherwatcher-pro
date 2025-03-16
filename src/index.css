@@ -122,3 +122,27 @@
   transform: translateY(-10px);
   transition: opacity 400ms, transform 400ms;
 }
+
+/* Fix for Leaflet marker icon positioning */
+.leaflet-default-icon-path {
+  background-image: url(https://unpkg.com/leaflet@1.7.1/dist/images/marker-icon.png);
+}
+
+.leaflet-default-shadow-path {
+  background-image: url(https://unpkg.com/leaflet@1.7.1/dist/images/marker-shadow.png);
+}
+
+.leaflet-container {
+  background-color: #f8fafc;
+}
+
+/* Add some nice transitions for leaflet elements */
+.leaflet-fade-anim .leaflet-tile,
+.leaflet-fade-anim .leaflet-popup {
+  opacity: 0;
+  transition: opacity 0.2s linear;
+}
+.leaflet-fade-anim .leaflet-tile-loaded,
+.leaflet-fade-anim .leaflet-map-pane .leaflet-popup {
+  opacity: 1;
+}

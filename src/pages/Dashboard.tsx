@@ -14,6 +14,7 @@ import WeatherAlerts from '@/components/dashboard/WeatherAlerts';
 import ForecastSection from '@/components/dashboard/ForecastSection';
 import DetailedInfo from '@/components/dashboard/DetailedInfo';
 import WeatherLoading from '@/components/dashboard/WeatherLoading';
+import WeatherMap from '@/components/dashboard/WeatherMap';
 
 const DEFAULT_LOCATION = { lat: 40.7128, lon: -74.0060, name: "New York, NY" };
 
@@ -23,6 +24,7 @@ const Dashboard = () => {
   const [weatherData, setWeatherData] = useState<WeatherData | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [currentLocation, setCurrentLocation] = useState(DEFAULT_LOCATION);
 
   useEffect(() => {
     if (!isAuthenticated) {
@@ -45,6 +47,7 @@ const Dashboard = () => {
     
     try {
       await fetchWeatherData(DEFAULT_LOCATION.lat, DEFAULT_LOCATION.lon);
+      setCurrentLocation(DEFAULT_LOCATION);
       
       // Update user's location if they're logged in
       if (user) {
@@ -68,7 +71,7 @@ const Dashboard = () => {
       // Since we no longer have geocodeLocation, we'll extract coordinates from user object
       // or use a default fallback method to get coordinates for the saved location name
       // For now, we'll default to New York coordinates if we can't determine the location
-      // In a real app, you would store coordinates with the location name
+      setCurrentLocation(DEFAULT_LOCATION);
       await fetchWeatherData(DEFAULT_LOCATION.lat, DEFAULT_LOCATION.lon);
       toast.info("Using default location coordinates. Please search for your location to get accurate weather data.");
     } catch (error) {
@@ -86,6 +89,9 @@ const Dashboard = () => {
     try {
       // Update user's saved location
       updateUserLocation(name);
+      
+      // Set current location for map display
+      setCurrentLocation({ lat, lon, name });
       
       // Fetch weather data for the selected location
       await fetchWeatherData(lat, lon);
@@ -124,7 +130,6 @@ const Dashboard = () => {
     }
   };
 
-  // Format the day name (e.g., "Today", "Tonight", or day of week)
   const formatDay = (periodName: string) => {
     return periodName;
   };
@@ -162,6 +167,8 @@ const Dashboard = () => {
                 currentConditions={weatherData.currentConditions} 
                 location={weatherData.location} 
               />
+              
+              <WeatherMap location={currentLocation} />
               
               <WeatherAlerts alerts={weatherData.alerts} />
               
