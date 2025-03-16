@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Card } from '@/components/ui/card';
-import { Cloud, CloudRain, CloudSnow, CloudSun, Sun, Wind } from 'lucide-react';
+import { Cloud, CloudRain, CloudSnow, CloudSun, Sun, Wind, Moon, CloudMoon } from 'lucide-react';
 
 interface ForecastCardProps {
   day: string;
@@ -21,7 +21,18 @@ const ForecastCard: React.FC<ForecastCardProps> = ({
   className
 }) => {
   const getWeatherIcon = () => {
-    // Use Lucide icons based on condition
+    // Check for night time first
+    if (day.toLowerCase() === 'tonight') {
+      if (condition.toLowerCase().includes('rain')) {
+        return <CloudMoon className="h-6 w-6 text-weather-blue" />;
+      } else if (condition.toLowerCase().includes('cloud')) {
+        return <CloudMoon className="h-6 w-6 text-weather-blue" />;
+      } else {
+        return <Moon className="h-6 w-6 text-weather-blue" />;
+      }
+    }
+    
+    // For daytime conditions
     if (condition.toLowerCase().includes('rain')) {
       return <CloudRain className="h-6 w-6 text-weather-blue" />;
     } else if (condition.toLowerCase().includes('snow')) {
