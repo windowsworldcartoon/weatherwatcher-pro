@@ -101,23 +101,51 @@ class WeatherService {
     }
   }
 
-  async searchLocationsByZip(zipCode: string): Promise<{ lat: number; lon: number; name: string }> {
+  async searchLocationsByCity(cityName: string): Promise<{ lat: number; lon: number; name: string }> {
     try {
-      // The NWS API doesn't have a direct ZIP code lookup, so we use a workaround
-      // Try to get point data for an approximate lat/lon for the ZIP code
-      // Most US zip codes can be approximated with this pattern
-      const response = await fetch(`${this.baseUrl}/points/${zipCode}`);
+      // Use the OpenStreetMap Nominatim API to search for city coordinates
+      const response = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(cityName)}&limit=1`);
       
       if (!response.ok) {
-        throw new Error('Invalid ZIP code or location not found');
+        throw new Error('City not found or network error');
       }
       
-      const data: WeatherPoint = await response.json();
+      const data = await response.json();
+      
+      if (!data || data.length === 0) {
+        throw new Error('City not found');
+      }
       
       return {
-        lat: data.properties.relativeLocation.properties.city ? parseFloat(data.properties.gridY.toString()) : 0,
-        lon: data.properties.relativeLocation.properties.state ? parseFloat(data.properties.gridX.toString()) : 0,
-        name: `${data.properties.relativeLocation.properties.city}, ${data.properties.relativeLocation.properties.state}`
+        lat: parseFloat(data[0].lat),
+        lon: parseFloat(data[0].lon),
+        name: data[0].display_name.split(',').slice(0, 2).join(',')
+      };
+    } catch (error) {
+      console.error('Error searching by city:', error);
+      throw error;
+    }
+  }
+
+  async searchLocationsByZip(zipCode: string): Promise<{ lat: number; lon: number; name: string }> {
+    try {
+      // Use the OpenStreetMap Nominatim API to search for ZIP code
+      const response = await fetch(`https://nominatim.openstreetmap.org/search?format=json&postalcode=${zipCode}&country=USA&limit=1`);
+      
+      if (!response.ok) {
+        throw new Error('ZIP code not found or network error');
+      }
+      
+      const data = await response.json();
+      
+      if (!data || data.length === 0) {
+        throw new Error('ZIP code not found');
+      }
+      
+      return {
+        lat: parseFloat(data[0].lat),
+        lon: parseFloat(data[0].lon),
+        name: data[0].display_name.split(',').slice(0, 2).join(',')
       };
     } catch (error) {
       console.error('Error searching by ZIP:', error);

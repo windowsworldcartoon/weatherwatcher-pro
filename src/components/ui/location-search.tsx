@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -12,33 +11,35 @@ interface LocationSearchProps {
 }
 
 const LocationSearch: React.FC<LocationSearchProps> = ({ onLocationSelect, className }) => {
-  const [zipCode, setZipCode] = useState('');
+  const [searchInput, setSearchInput] = useState('');
   const [isSearching, setIsSearching] = useState(false);
 
   const handleSearch = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!zipCode.trim()) {
-      toast.error('Please enter a ZIP code');
+    if (!searchInput.trim()) {
+      toast.error('Please enter a ZIP code or city name');
       return;
     }
     
     setIsSearching(true);
     try {
+      let result;
+      
       // Check if input looks like a ZIP code (5 digits)
-      if (!/^\d{5}$/.test(zipCode)) {
-        toast.error('Please enter a valid 5-digit ZIP code');
-        setIsSearching(false);
-        return;
+      if (/^\d{5}$/.test(searchInput)) {
+        // Use the WeatherService to get location data from ZIP code
+        result = await weatherService.searchLocationsByZip(searchInput);
+      } else {
+        // Otherwise treat as city search
+        result = await weatherService.searchLocationsByCity(searchInput);
       }
       
-      // Use the WeatherService to get location data from ZIP code
-      const result = await weatherService.searchLocationsByZip(zipCode);
       onLocationSelect(result);
       toast.success(`Location set to ${result.name}`);
     } catch (error) {
       console.error('Error searching location:', error);
-      toast.error('Could not find this ZIP code. Please try a different one.');
+      toast.error('Could not find this location. Please try a different search term.');
     } finally {
       setIsSearching(false);
     }
@@ -70,14 +71,14 @@ const LocationSearch: React.FC<LocationSearchProps> = ({ onLocationSelect, class
           toast.success(`Using current location: ${locationName}`);
         } catch (error) {
           console.error('Error getting location data:', error);
-          toast.error('Could not determine your location. Please search by ZIP code.');
+          toast.error('Could not determine your location. Please search by city name or ZIP code.');
         } finally {
           setIsSearching(false);
         }
       },
       (error) => {
         console.error('Geolocation error:', error);
-        toast.error('Failed to get your location. Please search by ZIP code.');
+        toast.error('Failed to get your location. Please search by city name or ZIP code.');
         setIsSearching(false);
       }
     );
@@ -88,9 +89,9 @@ const LocationSearch: React.FC<LocationSearchProps> = ({ onLocationSelect, class
       <form onSubmit={handleSearch} className="flex gap-2">
         <Input
           type="text"
-          placeholder="Enter 5-digit ZIP code"
-          value={zipCode}
-          onChange={(e) => setZipCode(e.target.value)}
+          placeholder="Enter city name or ZIP code"
+          value={searchInput}
+          onChange={(e) => setSearchInput(e.target.value)}
           className="w-full"
         />
         <Button type="submit" disabled={isSearching}>

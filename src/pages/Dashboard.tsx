@@ -16,7 +16,7 @@ import DetailedInfo from '@/components/dashboard/DetailedInfo';
 import WeatherLoading from '@/components/dashboard/WeatherLoading';
 import WeatherMap from '@/components/dashboard/WeatherMap';
 
-const DEFAULT_LOCATION = { lat: 40.7128, lon: -74.0060, name: "New York, NY" };
+const DEFAULT_LOCATION = { lat: 0, lon: 0, name: "Loading location..." };
 
 const Dashboard = () => {
   const { user, isAuthenticated, logout, updateUserLocation } = useAuth();
@@ -33,26 +33,18 @@ const Dashboard = () => {
       return;
     }
 
-    // If user has a saved location, fetch weather for it
-    // Otherwise, use geolocation or the default location
-    if (user?.location) {
-      fetchWeatherForSavedLocation();
-    } else {
-      tryGeolocationOrDefault();
-    }
-  }, [isAuthenticated, navigate, user]);
+    tryGeolocationOrDefault();
+  }, [isAuthenticated, navigate]);
 
   const tryGeolocationOrDefault = () => {
     if (!navigator.geolocation) {
-      // Browser doesn't support geolocation
-      fetchWeatherForDefaultLocation();
+      fetchWeatherForSavedLocation();
       return;
     }
 
     setIsLoading(true);
     navigator.geolocation.getCurrentPosition(
       async (position) => {
-        // Geolocation succeeded
         try {
           const pointData = await weatherService.getPointData(
             position.coords.latitude, 
@@ -69,69 +61,42 @@ const Dashboard = () => {
           setCurrentLocation(newLocation);
           setLocationBlocked(false);
           
-          // Update user's location if they're logged in
           if (user) {
             updateUserLocation(locationName);
           }
           
-          // Fetch weather for the current location
           await fetchWeatherData(position.coords.latitude, position.coords.longitude);
           toast.info(`Using your current location: ${locationName}`);
         } catch (error) {
           console.error('Error fetching weather for geolocation:', error);
-          fetchWeatherForDefaultLocation();
+          fetchWeatherForSavedLocation();
         } finally {
           setIsLoading(false);
         }
       },
       (error) => {
-        // Geolocation error (permission denied, timeout, etc.)
         console.error('Geolocation error:', error);
         setLocationBlocked(true);
-        fetchWeatherForDefaultLocation();
+        fetchWeatherForSavedLocation();
       }
     );
   };
 
-  const fetchWeatherForDefaultLocation = async () => {
-    setIsLoading(true);
-    setError(null);
-    
-    try {
-      await fetchWeatherData(DEFAULT_LOCATION.lat, DEFAULT_LOCATION.lon);
-      setCurrentLocation(DEFAULT_LOCATION);
-      
-      // Update user's location if they're logged in
-      if (user) {
-        updateUserLocation(DEFAULT_LOCATION.name);
-      }
-    } catch (error) {
-      console.error('Error fetching weather for default location:', error);
-      setError('Failed to load weather data for the default location. Please try searching for a location.');
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
   const fetchWeatherForSavedLocation = async () => {
-    if (!user?.location) return;
-    
-    setIsLoading(true);
-    setError(null);
-    
-    try {
-      // Since we no longer have geocodeLocation, we'll extract coordinates from user object
-      // or use a default fallback method to get coordinates for the saved location name
-      // For now, we'll default to New York coordinates if we can't determine the location
-      setCurrentLocation(DEFAULT_LOCATION);
-      await fetchWeatherData(DEFAULT_LOCATION.lat, DEFAULT_LOCATION.lon);
-      toast.info("Using default location coordinates. Please search for your location to get accurate weather data.");
-    } catch (error) {
-      console.error('Error fetching weather for saved location:', error);
-      setError('Failed to load weather data for your saved location. Please try searching for a new location.');
-    } finally {
-      setIsLoading(false);
+    if (user?.location) {
+      try {
+        const locationData = await weatherService.searchLocationsByCity(user.location);
+        setCurrentLocation(locationData);
+        await fetchWeatherData(locationData.lat, locationData.lon);
+        return;
+      } catch (error) {
+        console.error('Error fetching saved location:', error);
+      }
     }
+    
+    const fallbackLocation = { lat: 40.7128, lon: -74.0060, name: "New York, NY" };
+    setCurrentLocation(fallbackLocation);
+    await fetchWeatherData(fallbackLocation.lat, fallbackLocation.lon);
   };
 
   const handleLocationSelect = async ({ lat, lon, name }: { lat: number; lon: number; name: string }) => {
@@ -139,14 +104,11 @@ const Dashboard = () => {
     setError(null);
     
     try {
-      // Update user's saved location
       updateUserLocation(name);
       
-      // Set current location for map display
       setCurrentLocation({ lat, lon, name });
       setLocationBlocked(false);
       
-      // Fetch weather data for the selected location
       await fetchWeatherData(lat, lon);
     } catch (error) {
       console.error('Error fetching weather data:', error);
@@ -161,9 +123,7 @@ const Dashboard = () => {
       const data = await weatherService.getWeatherData(lat, lon);
       setWeatherData(data);
       
-      // Check for severe weather alerts
       if (data.alerts && data.alerts.length > 0) {
-        // Only notify for severe or extreme alerts
         const severeAlerts = data.alerts.filter(
           alert => alert.severity === 'Severe' || alert.severity === 'Extreme'
         );
@@ -198,7 +158,6 @@ const Dashboard = () => {
 
       <main className="flex-1 container py-8 max-w-6xl">
         <div className="space-y-8">
-          {/* Location Search */}
           <section className="animate-slide-down">
             <h1 className="text-3xl font-bold mb-4">Your Weather Dashboard</h1>
             <LocationSearch onLocationSelect={handleLocationSelect} />
