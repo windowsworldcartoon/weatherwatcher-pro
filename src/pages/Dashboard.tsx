@@ -25,6 +25,7 @@ const Dashboard = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [currentLocation, setCurrentLocation] = useState(DEFAULT_LOCATION);
+  const [locationBlocked, setLocationBlocked] = useState(false);
 
   useEffect(() => {
     if (!isAuthenticated) {
@@ -33,13 +34,64 @@ const Dashboard = () => {
     }
 
     // If user has a saved location, fetch weather for it
-    // Otherwise, use the default location
+    // Otherwise, use geolocation or the default location
     if (user?.location) {
       fetchWeatherForSavedLocation();
     } else {
-      fetchWeatherForDefaultLocation();
+      tryGeolocationOrDefault();
     }
   }, [isAuthenticated, navigate, user]);
+
+  const tryGeolocationOrDefault = () => {
+    if (!navigator.geolocation) {
+      // Browser doesn't support geolocation
+      fetchWeatherForDefaultLocation();
+      return;
+    }
+
+    setIsLoading(true);
+    navigator.geolocation.getCurrentPosition(
+      async (position) => {
+        // Geolocation succeeded
+        try {
+          const pointData = await weatherService.getPointData(
+            position.coords.latitude, 
+            position.coords.longitude
+          );
+          
+          const locationName = `${pointData.properties.relativeLocation.properties.city}, ${pointData.properties.relativeLocation.properties.state}`;
+          const newLocation = {
+            lat: position.coords.latitude,
+            lon: position.coords.longitude,
+            name: locationName
+          };
+          
+          setCurrentLocation(newLocation);
+          setLocationBlocked(false);
+          
+          // Update user's location if they're logged in
+          if (user) {
+            updateUserLocation(locationName);
+          }
+          
+          // Fetch weather for the current location
+          await fetchWeatherData(position.coords.latitude, position.coords.longitude);
+          toast.info(`Using your current location: ${locationName}`);
+        } catch (error) {
+          console.error('Error fetching weather for geolocation:', error);
+          fetchWeatherForDefaultLocation();
+        } finally {
+          setIsLoading(false);
+        }
+      },
+      (error) => {
+        // Geolocation error (permission denied, timeout, etc.)
+        console.error('Geolocation error:', error);
+        setLocationBlocked(true);
+        fetchWeatherForDefaultLocation();
+      }
+    );
+  };
 
   const fetchWeatherForDefaultLocation = async () => {
     setIsLoading(true);
@@ -92,6 +144,7 @@ const Dashboard = () => {
       
       // Set current location for map display
       setCurrentLocation({ lat, lon, name });
+      setLocationBlocked(false);
       
       // Fetch weather data for the selected location
       await fetchWeatherData(lat, lon);
@@ -168,7 +221,10 @@ const Dashboard = () => {
                 location={weatherData.location} 
               />
               
-              <WeatherMap location={currentLocation} />
+              <WeatherMap 
+                location={currentLocation} 
+                locationBlocked={locationBlocked} 
+              />
               
               <WeatherAlerts alerts={weatherData.alerts} />
               
