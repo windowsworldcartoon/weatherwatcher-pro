@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Card } from '@/components/ui/card';
-import { Cloud, CloudRain, CloudSnow, CloudSun, Sun, Wind, Moon, CloudMoon } from 'lucide-react';
+import { WiRain, WiThunderstorm, WiDaySunny, WiCloudy, WiSnow, WiDayCloudy, WiStrongWind, WiNightClear, WiNightCloudy, WiNightRain } from 'weather-icons-react';
 
 interface ForecastCardProps {
   day: string;
@@ -21,34 +21,37 @@ const ForecastCard: React.FC<ForecastCardProps> = ({
   className
 }) => {
   const getWeatherIcon = () => {
-    // Check for night time first
+    const iconSize = 24;
+    const iconColor = "#0EA5E9"; // weather-blue from tailwind config
+    
+    // Check if it's night time first
     if (day.toLowerCase() === 'tonight') {
-      if (condition.toLowerCase().includes('rain') || 
-          condition.toLowerCase().includes('shower') || 
-          condition.toLowerCase().includes('thunderstorm')) {
-        return <CloudMoon className="h-6 w-6 text-weather-blue" />;
+      if (condition.toLowerCase().includes('thunderstorm')) {
+        return <WiThunderstorm size={iconSize} color={iconColor} />;
+      } else if (condition.toLowerCase().includes('rain') || condition.toLowerCase().includes('shower')) {
+        return <WiNightRain size={iconSize} color={iconColor} />;
       } else if (condition.toLowerCase().includes('cloud')) {
-        return <CloudMoon className="h-6 w-6 text-weather-blue" />;
+        return <WiNightCloudy size={iconSize} color={iconColor} />;
       } else {
-        return <Moon className="h-6 w-6 text-weather-blue" />;
+        return <WiNightClear size={iconSize} color={iconColor} />;
       }
     }
     
     // For daytime conditions
-    if (condition.toLowerCase().includes('rain') || 
-        condition.toLowerCase().includes('shower') || 
-        condition.toLowerCase().includes('thunderstorm')) {
-      return <CloudRain className="h-6 w-6 text-weather-blue" />;
+    if (condition.toLowerCase().includes('thunderstorm')) {
+      return <WiThunderstorm size={iconSize} color={iconColor} />;
+    } else if (condition.toLowerCase().includes('rain') || condition.toLowerCase().includes('shower')) {
+      return <WiRain size={iconSize} color={iconColor} />;
     } else if (condition.toLowerCase().includes('snow')) {
-      return <CloudSnow className="h-6 w-6 text-weather-blue" />;
+      return <WiSnow size={iconSize} color={iconColor} />;
     } else if (condition.toLowerCase().includes('cloud') && condition.toLowerCase().includes('sun')) {
-      return <CloudSun className="h-6 w-6 text-weather-blue" />;
+      return <WiDayCloudy size={iconSize} color={iconColor} />;
     } else if (condition.toLowerCase().includes('cloud')) {
-      return <Cloud className="h-6 w-6 text-weather-blue" />;
+      return <WiCloudy size={iconSize} color={iconColor} />;
     } else if (condition.toLowerCase().includes('wind')) {
-      return <Wind className="h-6 w-6 text-weather-blue" />;
+      return <WiStrongWind size={iconSize} color={iconColor} />;
     } else {
-      return <Sun className="h-6 w-6 text-weather-blue" />;
+      return <WiDaySunny size={iconSize} color={iconColor} />;
     }
   };
 

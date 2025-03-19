@@ -2,6 +2,7 @@
 import React from 'react';
 import { Card } from '@/components/ui/card';
 import { Cloud, CloudRain, CloudSnow, CloudSun, Sun, Wind } from 'lucide-react';
+import { WiRain, WiThunderstorm, WiDaySunny, WiCloudy, WiSnow, WiDayCloudy, WiStrongWind } from 'weather-icons-react';
 
 interface WeatherCardProps {
   temperature: number;
@@ -25,21 +26,27 @@ const WeatherCard: React.FC<WeatherCardProps> = ({
   className
 }) => {
   const getWeatherIcon = () => {
-    // Use Lucide icons based on condition
-    if (condition.toLowerCase().includes('rain') || 
-        condition.toLowerCase().includes('shower') || 
-        condition.toLowerCase().includes('thunderstorm')) {
-      return <CloudRain className="h-12 w-12 text-weather-blue" />;
-    } else if (condition.toLowerCase().includes('snow')) {
-      return <CloudSnow className="h-12 w-12 text-weather-blue" />;
+    const iconSize = 42;
+    const iconColor = "#0EA5E9"; // weather-blue from tailwind config
+    
+    // Check for rain and thunderstorms first
+    if (condition.toLowerCase().includes('thunderstorm')) {
+      return <WiThunderstorm size={iconSize} color={iconColor} />;
+    } else if (condition.toLowerCase().includes('rain') || condition.toLowerCase().includes('shower')) {
+      return <WiRain size={iconSize} color={iconColor} />;
+    } 
+    
+    // Then check other conditions
+    else if (condition.toLowerCase().includes('snow')) {
+      return <WiSnow size={iconSize} color={iconColor} />;
     } else if (condition.toLowerCase().includes('cloud') && condition.toLowerCase().includes('sun')) {
-      return <CloudSun className="h-12 w-12 text-weather-blue" />;
+      return <WiDayCloudy size={iconSize} color={iconColor} />;
     } else if (condition.toLowerCase().includes('cloud')) {
-      return <Cloud className="h-12 w-12 text-weather-blue" />;
+      return <WiCloudy size={iconSize} color={iconColor} />;
     } else if (condition.toLowerCase().includes('wind')) {
-      return <Wind className="h-12 w-12 text-weather-blue" />;
+      return <WiStrongWind size={iconSize} color={iconColor} />;
     } else {
-      return <Sun className="h-12 w-12 text-weather-blue" />;
+      return <WiDaySunny size={iconSize} color={iconColor} />;
     }
   };
 
