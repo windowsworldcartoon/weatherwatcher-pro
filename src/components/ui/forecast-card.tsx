@@ -23,7 +23,9 @@ const ForecastCard: React.FC<ForecastCardProps> = ({
   const getWeatherIcon = () => {
     // Check for night time first
     if (day.toLowerCase() === 'tonight') {
-      if (condition.toLowerCase().includes('rain')) {
+      if (condition.toLowerCase().includes('rain') || 
+          condition.toLowerCase().includes('shower') || 
+          condition.toLowerCase().includes('thunderstorm')) {
         return <CloudMoon className="h-6 w-6 text-weather-blue" />;
       } else if (condition.toLowerCase().includes('cloud')) {
         return <CloudMoon className="h-6 w-6 text-weather-blue" />;
@@ -33,7 +35,9 @@ const ForecastCard: React.FC<ForecastCardProps> = ({
     }
     
     // For daytime conditions
-    if (condition.toLowerCase().includes('rain')) {
+    if (condition.toLowerCase().includes('rain') || 
+        condition.toLowerCase().includes('shower') || 
+        condition.toLowerCase().includes('thunderstorm')) {
       return <CloudRain className="h-6 w-6 text-weather-blue" />;
     } else if (condition.toLowerCase().includes('snow')) {
       return <CloudSnow className="h-6 w-6 text-weather-blue" />;

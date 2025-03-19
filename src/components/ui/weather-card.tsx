@@ -26,7 +26,9 @@ const WeatherCard: React.FC<WeatherCardProps> = ({
 }) => {
   const getWeatherIcon = () => {
     // Use Lucide icons based on condition
-    if (condition.toLowerCase().includes('rain')) {
+    if (condition.toLowerCase().includes('rain') || 
+        condition.toLowerCase().includes('shower') || 
+        condition.toLowerCase().includes('thunderstorm')) {
       return <CloudRain className="h-12 w-12 text-weather-blue" />;
     } else if (condition.toLowerCase().includes('snow')) {
       return <CloudSnow className="h-12 w-12 text-weather-blue" />;
