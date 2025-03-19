@@ -1,10 +1,11 @@
 
 import React from 'react';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { AlertTriangle, ArrowRight } from 'lucide-react';
+import { AlertTriangle, ArrowRight, Siren } from 'lucide-react';
 import { WeatherData } from '@/services/weather';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 
 interface WeatherAlertsProps {
   alerts: WeatherData['alerts'];
@@ -24,8 +25,44 @@ const WeatherAlerts: React.FC<WeatherAlertsProps> = ({ alerts }) => {
     }
   };
 
+  // Check if there's a tornado warning
+  const tornadoWarning = alerts.find(alert => 
+    alert.event.toLowerCase().includes('tornado')
+  );
+
   return (
     <section className="space-y-4 animate-slide-up">
+      {tornadoWarning && (
+        <Dialog defaultOpen>
+          <DialogContent className="sm:max-w-xl border-red-500 border-2">
+            <DialogHeader>
+              <DialogTitle className="text-2xl text-red-500 flex items-center gap-2">
+                <Siren className="h-6 w-6 text-red-500 animate-pulse" />
+                TORNADO WARNING
+              </DialogTitle>
+            </DialogHeader>
+            <div className="bg-red-50 p-4 rounded-md border border-red-200">
+              <div className="flex items-start gap-3">
+                <AlertTriangle className="h-6 w-6 text-red-500 flex-shrink-0 mt-1" />
+                <div className="space-y-2">
+                  <p className="font-semibold">{tornadoWarning.headline}</p>
+                  <p className="text-sm">{tornadoWarning.description.substring(0, 300)}...</p>
+                  <div className="grid grid-cols-2 gap-2 text-xs mt-2">
+                    <div><span className="font-medium">Start:</span> {new Date(tornadoWarning.onset).toLocaleString()}</div>
+                    <div><span className="font-medium">End:</span> {new Date(tornadoWarning.ends).toLocaleString()}</div>
+                  </div>
+                  <Link to="/severe-weather">
+                    <Button variant="destructive" size="sm" className="mt-2">
+                      View Full Details <ArrowRight className="ml-1 h-4 w-4" />
+                    </Button>
+                  </Link>
+                </div>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
+      )}
+
       <div className="flex justify-between items-center">
         <h2 className="text-xl font-semibold">Weather Alerts</h2>
         {alerts.length > 1 && (
