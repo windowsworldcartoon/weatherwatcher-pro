@@ -6,6 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { useAuth } from '@/contexts/AuthContext';
+import { Switch } from '@/components/ui/switch';
 
 interface AuthFormProps {
   mode: 'login' | 'signup';
@@ -15,6 +16,7 @@ const AuthForm: React.FC<AuthFormProps> = ({ mode }) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [name, setName] = useState('');
+  const [rememberMe, setRememberMe] = useState(false);
   const { login, signup, isLoading } = useAuth();
   const navigate = useNavigate();
 
@@ -24,7 +26,7 @@ const AuthForm: React.FC<AuthFormProps> = ({ mode }) => {
     let success = false;
     
     if (mode === 'login') {
-      success = await login(email, password);
+      success = await login(email, password, rememberMe);
     } else {
       success = await signup(email, password, name);
     }
@@ -91,6 +93,17 @@ const AuthForm: React.FC<AuthFormProps> = ({ mode }) => {
               required
             />
           </div>
+          
+          {mode === 'login' && (
+            <div className="flex items-center space-x-2">
+              <Switch 
+                id="remember-me" 
+                checked={rememberMe} 
+                onCheckedChange={setRememberMe} 
+              />
+              <Label htmlFor="remember-me" className="cursor-pointer">Stay logged in</Label>
+            </div>
+          )}
           
           <Button className="w-full" type="submit" disabled={isLoading}>
             {isLoading ? 'Processing...' : mode === 'login' ? 'Sign in' : 'Sign up'}

@@ -13,7 +13,7 @@ interface AuthContextType {
   user: User | null;
   isAuthenticated: boolean;
   isLoading: boolean;
-  login: (email: string, password: string) => Promise<boolean>;
+  login: (email: string, password: string, rememberMe: boolean) => Promise<boolean>;
   signup: (email: string, password: string, name: string) => Promise<boolean>;
   logout: () => void;
   updateUserLocation: (location: string) => void;
@@ -47,7 +47,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     setIsLoading(false);
   }, []);
 
-  const login = async (email: string, password: string): Promise<boolean> => {
+  const login = async (email: string, password: string, rememberMe: boolean): Promise<boolean> => {
     setIsLoading(true);
     try {
       // Simulate authentication API call
@@ -61,8 +61,17 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       };
       
       setUser(newUser);
-      localStorage.setItem('windowsworld_user', JSON.stringify(newUser));
-      toast.success('Successfully logged in!');
+      
+      // Store with appropriate persistence
+      if (rememberMe) {
+        localStorage.setItem('windowsworld_user', JSON.stringify(newUser));
+        toast.success('Successfully logged in! Your session will be remembered.');
+      } else {
+        // Use sessionStorage for non-persistent sessions
+        sessionStorage.setItem('windowsworld_user', JSON.stringify(newUser));
+        toast.success('Successfully logged in!');
+      }
+      
       setIsLoading(false);
       return true;
     } catch (error) {
@@ -88,6 +97,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       };
       
       setUser(newUser);
+      // Always persist signup sessions by default
       localStorage.setItem('windowsworld_user', JSON.stringify(newUser));
       toast.success('Account created successfully!');
       setIsLoading(false);
@@ -103,6 +113,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const logout = () => {
     setUser(null);
     localStorage.removeItem('windowsworld_user');
+    sessionStorage.removeItem('windowsworld_user');
     toast.info('You have been logged out');
   };
 
@@ -110,7 +121,14 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     if (user) {
       const updatedUser = { ...user, location };
       setUser(updatedUser);
-      localStorage.setItem('windowsworld_user', JSON.stringify(updatedUser));
+      
+      // Update in both storage locations to be safe
+      if (localStorage.getItem('windowsworld_user')) {
+        localStorage.setItem('windowsworld_user', JSON.stringify(updatedUser));
+      }
+      if (sessionStorage.getItem('windowsworld_user')) {
+        sessionStorage.setItem('windowsworld_user', JSON.stringify(updatedUser));
+      }
     }
   };
 

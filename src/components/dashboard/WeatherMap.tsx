@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { MapContainer, TileLayer, Marker, Popup, LayersControl } from 'react-leaflet';
+import { MapContainer, TileLayer, Marker, Popup, LayersControl, WMSTileLayer } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import { Icon } from 'leaflet';
 import { MapPin, AlertTriangle, Radar } from 'lucide-react';
@@ -33,8 +33,7 @@ const WeatherMap: React.FC<WeatherMapProps> = ({ location, locationBlocked = fal
   const [radarOpacity, setRadarOpacity] = useState(0.7);
 
   const radarUrl = `https://tilecache.rainviewer.com/v2/radar/nowcast/512/${Math.floor(Date.now() / 1000)}/256/{z}/{x}/{y}/8/1_1.png`;
-  const stationRadarUrl = `https://mesonet.agron.iastate.edu/cgi-bin/wms/nexrad/n0r.cgi?service=WMS&request=GetMap&version=1.1.1&layers=nexrad-n0r&styles=&format=image/png&transparent=true&srs=EPSG:3857&bbox={bbox}&width=256&height=256`;
-
+  
   return (
     <section className="animate-blur-in my-6">
       <div className="flex justify-between items-center mb-4">
@@ -110,8 +109,11 @@ const WeatherMap: React.FC<WeatherMapProps> = ({ location, locationBlocked = fal
             )}
             
             <LayersControl.Overlay name="NEXRAD Stations">
-              <TileLayer
-                url={stationRadarUrl}
+              <WMSTileLayer
+                url="https://mesonet.agron.iastate.edu/cgi-bin/wms/nexrad/n0r.cgi"
+                layers="nexrad-n0r"
+                format="image/png"
+                transparent={true}
                 opacity={radarOpacity}
                 attribution="NEXRAD/NWS"
               />
