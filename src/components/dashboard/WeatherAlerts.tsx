@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { AlertTriangle, ArrowRight, Siren } from 'lucide-react';
+import { AlertTriangle, ArrowRight, Siren, Tornado } from 'lucide-react';
 import { WeatherData } from '@/services/weather';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -27,7 +27,14 @@ const WeatherAlerts: React.FC<WeatherAlertsProps> = ({ alerts }) => {
 
   // Check if there's a tornado warning
   const tornadoWarning = alerts.find(alert => 
-    alert.event.toLowerCase().includes('tornado')
+    alert.event.toLowerCase().includes('tornado') && 
+    alert.event.toLowerCase().includes('warning')
+  );
+  
+  // Check if there's a tornado watch
+  const tornadoWatch = alerts.find(alert => 
+    alert.event.toLowerCase().includes('tornado') && 
+    alert.event.toLowerCase().includes('watch')
   );
 
   return (
@@ -43,7 +50,7 @@ const WeatherAlerts: React.FC<WeatherAlertsProps> = ({ alerts }) => {
             </DialogHeader>
             <div className="bg-red-50 p-4 rounded-md border border-red-200">
               <div className="flex items-start gap-3">
-                <AlertTriangle className="h-6 w-6 text-red-500 flex-shrink-0 mt-1" />
+                <Tornado className="h-6 w-6 text-red-500 flex-shrink-0 mt-1" />
                 <div className="space-y-2">
                   <p className="font-semibold">{tornadoWarning.headline}</p>
                   <p className="text-sm">{tornadoWarning.description.substring(0, 300)}...</p>
@@ -62,6 +69,28 @@ const WeatherAlerts: React.FC<WeatherAlertsProps> = ({ alerts }) => {
           </DialogContent>
         </Dialog>
       )}
+      
+      {tornadoWatch && !tornadoWarning && (
+        <Alert className="border-orange-500 bg-orange-50 dark:bg-orange-950/30">
+          <div className="flex items-start gap-3">
+            <Tornado className="h-5 w-5 text-orange-600 flex-shrink-0 mt-0.5" />
+            <div className="space-y-2 w-full">
+              <h3 className="font-semibold text-orange-800 dark:text-orange-300">TORNADO WATCH</h3>
+              <p className="text-sm text-orange-700 dark:text-orange-400">{tornadoWatch.headline}</p>
+              <div className="flex justify-between items-center mt-2">
+                <div className="text-xs text-orange-700">
+                  <span className="font-medium">Valid until:</span> {new Date(tornadoWatch.ends).toLocaleString()}
+                </div>
+                <Link to="/severe-weather">
+                  <Button variant="outline" size="sm" className="border-orange-500 text-orange-700 hover:bg-orange-100">
+                    Details <ArrowRight className="ml-1 h-4 w-4" />
+                  </Button>
+                </Link>
+              </div>
+            </div>
+          </div>
+        </Alert>
+      )}
 
       <div className="flex justify-between items-center">
         <h2 className="text-xl font-semibold">Weather Alerts</h2>
@@ -74,7 +103,10 @@ const WeatherAlerts: React.FC<WeatherAlertsProps> = ({ alerts }) => {
         )}
       </div>
       
-      {alerts.slice(0, 1).map((alert) => (
+      {alerts.filter(a => 
+        !(a.event.toLowerCase().includes('tornado') && 
+          (a.event.toLowerCase().includes('warning') || a.event.toLowerCase().includes('watch')))
+      ).slice(0, 1).map((alert) => (
         <Alert key={alert.id} variant={severityColor(alert.severity)}>
           <AlertTriangle className="h-4 w-4" />
           <AlertTitle>{alert.event}</AlertTitle>

@@ -3,7 +3,7 @@ import React, { useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { AlertTriangle, ArrowLeft } from 'lucide-react';
+import { AlertTriangle, ArrowLeft, Tornado, Siren } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
@@ -41,7 +41,15 @@ const SevereWeather = () => {
     enabled: !!user?.location && isAuthenticated
   });
 
-  const getSeverityClass = (severity: string) => {
+  const getSeverityClass = (severity: string, event: string) => {
+    if (event.toLowerCase().includes('tornado')) {
+      if (event.toLowerCase().includes('warning')) {
+        return 'bg-red-50 border-red-300';
+      } else if (event.toLowerCase().includes('watch')) {
+        return 'bg-orange-50 border-orange-300';
+      }
+    }
+    
     switch(severity.toLowerCase()) {
       case 'extreme':
         return 'bg-red-50 border-red-200';
@@ -52,6 +60,15 @@ const SevereWeather = () => {
       default:
         return 'bg-blue-50 border-blue-200';
     }
+  };
+  
+  const getAlertIcon = (event: string) => {
+    if (event.toLowerCase().includes('tornado')) {
+      return event.toLowerCase().includes('warning') 
+        ? <Siren className="h-5 w-5 text-red-600 mt-1" /> 
+        : <Tornado className="h-5 w-5 text-orange-600 mt-1" />;
+    }
+    return <AlertTriangle className="h-5 w-5 text-red-600 mt-1" />;
   };
 
   return (
@@ -103,51 +120,153 @@ const SevereWeather = () => {
 
         {alerts && alerts.length > 0 && (
           <div className="space-y-4">
-            {alerts.map((alert, index) => (
-              <Collapsible key={alert.id || index} className={`border rounded-lg overflow-hidden ${getSeverityClass(alert.severity)}`}>
-                <div className="p-4">
-                  <div className="flex items-start justify-between">
-                    <div className="flex items-start gap-2">
-                      <AlertTriangle className="h-5 w-5 text-red-600 mt-1" />
-                      <div>
-                        <h3 className="font-semibold">{alert.event}</h3>
-                        <p className="text-sm text-muted-foreground">{alert.headline}</p>
+            {/* Show tornado warnings first */}
+            {alerts
+              .filter(alert => alert.event.toLowerCase().includes('tornado') && alert.event.toLowerCase().includes('warning'))
+              .map((alert, index) => (
+                <Collapsible key={alert.id || `tornado-warning-${index}`} className={`border rounded-lg overflow-hidden ${getSeverityClass(alert.severity, alert.event)}`}>
+                  <div className="p-4">
+                    <div className="flex items-start justify-between">
+                      <div className="flex items-start gap-2">
+                        <Siren className="h-5 w-5 text-red-600 animate-pulse mt-1" />
+                        <div>
+                          <h3 className="font-semibold text-red-800">{alert.event.toUpperCase()}</h3>
+                          <p className="text-sm text-red-700">{alert.headline}</p>
+                        </div>
                       </div>
+                      <CollapsibleTrigger asChild>
+                        <Button variant="ghost" size="sm">
+                          Details
+                        </Button>
+                      </CollapsibleTrigger>
                     </div>
-                    <CollapsibleTrigger asChild>
-                      <Button variant="ghost" size="sm">
-                        Details
-                      </Button>
-                    </CollapsibleTrigger>
+                    
+                    <CollapsibleContent>
+                      <div className="mt-4 pt-4 border-t border-gray-200">
+                        <p className="whitespace-pre-line text-sm">{alert.description}</p>
+                        
+                        <div className="mt-4 grid grid-cols-2 gap-2 text-xs">
+                          <div>
+                            <span className="font-medium">Severity: </span>
+                            {alert.severity}
+                          </div>
+                          <div>
+                            <span className="font-medium">Urgency: </span>
+                            {alert.urgency}
+                          </div>
+                          <div>
+                            <span className="font-medium">Start: </span>
+                            {new Date(alert.onset).toLocaleString()}
+                          </div>
+                          <div>
+                            <span className="font-medium">End: </span>
+                            {new Date(alert.ends).toLocaleString()}
+                          </div>
+                        </div>
+                      </div>
+                    </CollapsibleContent>
                   </div>
-                  
-                  <CollapsibleContent>
-                    <div className="mt-4 pt-4 border-t border-gray-200">
-                      <p className="whitespace-pre-line text-sm">{alert.description}</p>
-                      
-                      <div className="mt-4 grid grid-cols-2 gap-2 text-xs">
+                </Collapsible>
+              ))}
+              
+            {/* Show tornado watches next */}
+            {alerts
+              .filter(alert => alert.event.toLowerCase().includes('tornado') && alert.event.toLowerCase().includes('watch'))
+              .map((alert, index) => (
+                <Collapsible key={alert.id || `tornado-watch-${index}`} className={`border rounded-lg overflow-hidden ${getSeverityClass(alert.severity, alert.event)}`}>
+                  <div className="p-4">
+                    <div className="flex items-start justify-between">
+                      <div className="flex items-start gap-2">
+                        <Tornado className="h-5 w-5 text-orange-600 mt-1" />
                         <div>
-                          <span className="font-medium">Severity: </span>
-                          {alert.severity}
-                        </div>
-                        <div>
-                          <span className="font-medium">Urgency: </span>
-                          {alert.urgency}
-                        </div>
-                        <div>
-                          <span className="font-medium">Start: </span>
-                          {new Date(alert.onset).toLocaleString()}
-                        </div>
-                        <div>
-                          <span className="font-medium">End: </span>
-                          {new Date(alert.ends).toLocaleString()}
+                          <h3 className="font-semibold text-orange-800">{alert.event.toUpperCase()}</h3>
+                          <p className="text-sm text-orange-700">{alert.headline}</p>
                         </div>
                       </div>
+                      <CollapsibleTrigger asChild>
+                        <Button variant="ghost" size="sm">
+                          Details
+                        </Button>
+                      </CollapsibleTrigger>
                     </div>
-                  </CollapsibleContent>
-                </div>
-              </Collapsible>
-            ))}
+                    
+                    <CollapsibleContent>
+                      <div className="mt-4 pt-4 border-t border-gray-200">
+                        <p className="whitespace-pre-line text-sm">{alert.description}</p>
+                        
+                        <div className="mt-4 grid grid-cols-2 gap-2 text-xs">
+                          <div>
+                            <span className="font-medium">Severity: </span>
+                            {alert.severity}
+                          </div>
+                          <div>
+                            <span className="font-medium">Urgency: </span>
+                            {alert.urgency}
+                          </div>
+                          <div>
+                            <span className="font-medium">Start: </span>
+                            {new Date(alert.onset).toLocaleString()}
+                          </div>
+                          <div>
+                            <span className="font-medium">End: </span>
+                            {new Date(alert.ends).toLocaleString()}
+                          </div>
+                        </div>
+                      </div>
+                    </CollapsibleContent>
+                  </div>
+                </Collapsible>
+              ))}
+              
+            {/* Show other alerts last */}
+            {alerts
+              .filter(alert => !(alert.event.toLowerCase().includes('tornado') && 
+                (alert.event.toLowerCase().includes('warning') || alert.event.toLowerCase().includes('watch'))))
+              .map((alert, index) => (
+                <Collapsible key={alert.id || index} className={`border rounded-lg overflow-hidden ${getSeverityClass(alert.severity, alert.event)}`}>
+                  <div className="p-4">
+                    <div className="flex items-start justify-between">
+                      <div className="flex items-start gap-2">
+                        {getAlertIcon(alert.event)}
+                        <div>
+                          <h3 className="font-semibold">{alert.event}</h3>
+                          <p className="text-sm text-muted-foreground">{alert.headline}</p>
+                        </div>
+                      </div>
+                      <CollapsibleTrigger asChild>
+                        <Button variant="ghost" size="sm">
+                          Details
+                        </Button>
+                      </CollapsibleTrigger>
+                    </div>
+                    
+                    <CollapsibleContent>
+                      <div className="mt-4 pt-4 border-t border-gray-200">
+                        <p className="whitespace-pre-line text-sm">{alert.description}</p>
+                        
+                        <div className="mt-4 grid grid-cols-2 gap-2 text-xs">
+                          <div>
+                            <span className="font-medium">Severity: </span>
+                            {alert.severity}
+                          </div>
+                          <div>
+                            <span className="font-medium">Urgency: </span>
+                            {alert.urgency}
+                          </div>
+                          <div>
+                            <span className="font-medium">Start: </span>
+                            {new Date(alert.onset).toLocaleString()}
+                          </div>
+                          <div>
+                            <span className="font-medium">End: </span>
+                            {new Date(alert.ends).toLocaleString()}
+                          </div>
+                        </div>
+                      </div>
+                    </CollapsibleContent>
+                  </div>
+                </Collapsible>
+              ))}
           </div>
         )}
       </div>
