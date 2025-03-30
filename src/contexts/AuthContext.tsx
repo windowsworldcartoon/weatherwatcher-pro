@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { toast } from 'sonner';
-import { sendAlertEmail as sendEmailAlert, sendTestEmail } from '@/utils/emailSender';
+import { sendAlertEmail as sendEmailAlert, sendTestEmail, sendPendingAlerts } from '@/utils/emailSender';
 
 type User = {
   id: string;
@@ -53,6 +53,14 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       }
     }
     setIsLoading(false);
+    
+    sendPendingAlerts().then(count => {
+      if (count > 0) {
+        toast.success(`Sent ${count} pending weather alert(s)`, {
+          description: 'Alerts that were stored while you were offline have been sent.'
+        });
+      }
+    });
   }, []);
 
   const login = async (email: string, password: string, rememberMe: boolean): Promise<boolean> => {

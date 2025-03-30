@@ -5,6 +5,7 @@
  * Handles all email operations for the weather app, including
  * alert emails, notifications, and offline support.
  */
+import nodemailer from 'nodemailer';
 
 type AlertEmailData = {
   event: string;
@@ -12,6 +13,15 @@ type AlertEmailData = {
   recipient?: string;
   timestamp?: string;
 };
+
+// Configure nodemailer transporter
+const transporter = nodemailer.createTransport({
+  service: 'gmail',
+  auth: {
+    user: 'windowsworldcartoon@gmail.com',
+    pass: 'app-password-here' // You'll need to use an app password for Gmail
+  }
+});
 
 /**
  * Sends a weather alert email to the user
@@ -34,16 +44,34 @@ export const sendAlertEmail = async (
   };
 
   try {
-    // In a real app, this would make an API call to a backend service
-    console.log(`SENDING EMAIL ALERT to ${recipient}`);
-    console.log(`Subject: WEATHER ALERT: ${data.event}`);
-    console.log(`Body: ${data.description}`);
+    // Check if we're online
+    if (navigator.onLine) {
+      // Send the actual email
+      await transporter.sendMail({
+        from: '"Weather Alert Service" <windowsworldcartoon@gmail.com>',
+        to: recipient,
+        subject: `WEATHER ALERT: ${data.event}`,
+        html: `
+          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e0e0e0; border-radius: 5px;">
+            <h2 style="color: #d32f2f;">${data.event}</h2>
+            <p><strong>Time:</strong> ${new Date(emailPayload.timestamp).toLocaleString()}</p>
+            <div style="margin: 20px 0; padding: 15px; background-color: #fafafa; border-left: 4px solid #d32f2f; border-radius: 4px;">
+              ${data.description}
+            </div>
+            <p style="font-size: 12px; color: #757575; margin-top: 30px;">
+              This is an automated alert from the Weather App. Please do not reply to this email.
+            </p>
+          </div>
+        `
+      });
+      
+      console.log(`Email alert sent to ${recipient}`);
+    } else {
+      console.log('Currently offline. Storing email for later sending.');
+    }
     
     // Always store in localStorage for offline support
     storeOfflineAlert(emailPayload);
-    
-    // Simulate network request
-    await new Promise(resolve => setTimeout(resolve, 300));
     
     return true;
   } catch (error) {
@@ -82,19 +110,80 @@ export const getPendingAlerts = (): (AlertEmailData & { subject?: string })[] =>
 };
 
 /**
+ * Try to send any pending offline alerts
+ */
+export const sendPendingAlerts = async (): Promise<number> => {
+  if (!navigator.onLine) {
+    return 0;
+  }
+  
+  const pendingAlerts = getPendingAlerts();
+  if (pendingAlerts.length === 0) {
+    return 0;
+  }
+  
+  let sentCount = 0;
+  const remainingAlerts = [];
+  
+  for (const alert of pendingAlerts) {
+    try {
+      await transporter.sendMail({
+        from: '"Weather Alert Service" <windowsworldcartoon@gmail.com>',
+        to: alert.recipient,
+        subject: alert.subject,
+        html: `
+          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e0e0e0; border-radius: 5px;">
+            <h2 style="color: #d32f2f;">${alert.event}</h2>
+            <p><strong>Time:</strong> ${new Date(alert.timestamp || '').toLocaleString()}</p>
+            <div style="margin: 20px 0; padding: 15px; background-color: #fafafa; border-left: 4px solid #d32f2f; border-radius: 4px;">
+              ${alert.description}
+            </div>
+            <p style="font-size: 12px; color: #757575; margin-top: 30px;">
+              This is an automated alert from the Weather App. Please do not reply to this email.
+            </p>
+          </div>
+        `
+      });
+      sentCount++;
+    } catch (error) {
+      console.error('Failed to send pending alert:', error);
+      remainingAlerts.push(alert);
+    }
+  }
+  
+  localStorage.setItem('pending_weather_alerts', JSON.stringify(remainingAlerts));
+  return sentCount;
+};
+
+/**
  * Sends a test email to verify email alert configuration
  */
 export const sendTestEmail = async (userEmail?: string): Promise<boolean> => {
   const recipient = userEmail || "windowsworldcartoon@gmail.com";
   
   try {
-    // Simulate API call
-    console.log(`SENDING TEST EMAIL to ${recipient}`);
-    console.log('Subject: Test Weather Alert');
-    console.log('Body: This is a test email to verify your weather alert configuration is working correctly.');
-    
-    // Simulate network request
-    await new Promise(resolve => setTimeout(resolve, 300));
+    if (navigator.onLine) {
+      await transporter.sendMail({
+        from: '"Weather Alert Service" <windowsworldcartoon@gmail.com>',
+        to: recipient,
+        subject: 'Test Weather Alert',
+        html: `
+          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e0e0e0; border-radius: 5px;">
+            <h2 style="color: #2196f3;">Test Weather Alert</h2>
+            <p>This is a test email to verify your weather alert configuration is working correctly.</p>
+            <p>If you received this email, your weather alerts are properly configured.</p>
+            <p style="font-size: 12px; color: #757575; margin-top: 30px;">
+              This is an automated test from the Weather App. Please do not reply to this email.
+            </p>
+          </div>
+        `
+      });
+      
+      console.log(`Test email sent to ${recipient}`);
+    } else {
+      console.log('Currently offline. Test email could not be sent.');
+      return false;
+    }
     
     return true;
   } catch (error) {
@@ -102,3 +191,13 @@ export const sendTestEmail = async (userEmail?: string): Promise<boolean> => {
     return false;
   }
 };
+
+// Listen for online status to send pending alerts
+if (typeof window !== 'undefined') {
+  window.addEventListener('online', async () => {
+    const sent = await sendPendingAlerts();
+    if (sent > 0) {
+      console.log(`Successfully sent ${sent} pending alert(s) that were queued offline.`);
+    }
+  });
+}

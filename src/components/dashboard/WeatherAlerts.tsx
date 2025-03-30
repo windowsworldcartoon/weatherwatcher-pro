@@ -30,7 +30,7 @@ const WeatherAlerts: React.FC<WeatherAlertsProps> = ({ alerts }) => {
       }).then(success => {
         if (success) {
           toast.success('Tornado warning email alert sent!', {
-            description: 'Details have been sent to your email address.'
+            description: 'Critical alert details have been sent to your email.'
           });
         }
       });
@@ -103,13 +103,17 @@ const WeatherAlerts: React.FC<WeatherAlertsProps> = ({ alerts }) => {
       }).then(success => {
         if (success) {
           toast.success('Alert email sent!', {
-            description: 'Weather alert details have been sent to your email.'
+            description: 'Weather alert details have been sent to your email address.'
+          });
+        } else {
+          toast.info('Alert saved for sending later', {
+            description: 'You appear to be offline. The alert will be sent when you reconnect.'
           });
         }
       });
     } else {
       toast.error('Email alerts not enabled', {
-        description: 'Enable email alerts in your profile settings.'
+        description: 'Enable email alerts in your profile settings to receive notifications.'
       });
     }
   };
