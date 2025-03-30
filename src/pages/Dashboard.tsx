@@ -1,7 +1,9 @@
+
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { Button } from '@/components/ui/button'; // Added missing Button import
 import { weatherService, WeatherData } from '@/services/weather';
 import { AlertTriangle } from 'lucide-react';
 import { toast } from 'sonner';
