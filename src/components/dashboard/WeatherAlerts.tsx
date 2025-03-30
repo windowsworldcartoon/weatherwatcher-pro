@@ -43,17 +43,29 @@ const WeatherAlerts: React.FC<WeatherAlertsProps> = ({ alerts }) => {
     );
     
     if (severeAlerts?.length && user?.alertPreferences?.email && !tornadoWarning) {
-      severeAlerts.forEach(alert => {
-        sendAlertEmail({
-          event: alert.event,
-          description: alert.description
-        });
-      });
+      // Only send alerts that haven't been sent already
+      // We'll use a simple check based on the alert ID
+      const sentAlertIds = JSON.parse(localStorage.getItem('sent_alert_ids') || '[]');
+      const newAlerts = severeAlerts.filter(alert => !sentAlertIds.includes(alert.id));
       
-      if (severeAlerts.length > 0) {
-        toast.info(`${severeAlerts.length} weather alert(s) sent to your email`, {
-          description: 'Check your inbox for details.'
+      if (newAlerts.length > 0) {
+        newAlerts.forEach(alert => {
+          sendAlertEmail({
+            event: alert.event,
+            description: alert.description
+          });
+          
+          // Add the alert ID to the sent alerts
+          sentAlertIds.push(alert.id);
         });
+        
+        localStorage.setItem('sent_alert_ids', JSON.stringify(sentAlertIds));
+        
+        if (newAlerts.length > 0) {
+          toast.info(`${newAlerts.length} weather alert(s) sent to your email`, {
+            description: 'Check your inbox for details.'
+          });
+        }
       }
     }
   }, [alerts, user, sendAlertEmail]);

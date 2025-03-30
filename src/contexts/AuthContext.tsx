@@ -1,6 +1,6 @@
-
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { toast } from 'sonner';
+import { sendAlertEmail as sendEmailAlert, sendTestEmail } from '@/utils/emailSender';
 
 type User = {
   id: string;
@@ -25,6 +25,7 @@ interface AuthContextType {
   toggleSubscription: () => void;
   updateAlertPreferences: (preferences: User['alertPreferences']) => void;
   sendAlertEmail: (alertInfo: { event: string; description: string }) => Promise<boolean>;
+  sendTestEmailAlert: () => Promise<boolean>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -42,7 +43,6 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const [isLoading, setIsLoading] = useState<boolean>(true);
 
   useEffect(() => {
-    // Check for saved auth in localStorage
     const savedUser = localStorage.getItem('windowsworld_user');
     if (savedUser) {
       try {
@@ -58,10 +58,8 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const login = async (email: string, password: string, rememberMe: boolean): Promise<boolean> => {
     setIsLoading(true);
     try {
-      // Simulate authentication API call
       await new Promise(resolve => setTimeout(resolve, 1000));
       
-      // For demo purposes, we'll just create a user with the email
       const newUser = {
         id: Math.random().toString(36).substring(2, 9),
         email,
@@ -74,12 +72,10 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       
       setUser(newUser);
       
-      // Store with appropriate persistence
       if (rememberMe) {
         localStorage.setItem('windowsworld_user', JSON.stringify(newUser));
         toast.success('Successfully logged in! Your session will be remembered.');
       } else {
-        // Use sessionStorage for non-persistent sessions
         sessionStorage.setItem('windowsworld_user', JSON.stringify(newUser));
         toast.success('Successfully logged in!');
       }
@@ -97,10 +93,8 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const signup = async (email: string, password: string, name: string): Promise<boolean> => {
     setIsLoading(true);
     try {
-      // Simulate authentication API call
       await new Promise(resolve => setTimeout(resolve, 1000));
       
-      // For demo purposes, create a new user
       const newUser = {
         id: Math.random().toString(36).substring(2, 9),
         email,
@@ -113,7 +107,6 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       };
       
       setUser(newUser);
-      // Always persist signup sessions by default
       localStorage.setItem('windowsworld_user', JSON.stringify(newUser));
       toast.success('Account created successfully!');
       setIsLoading(false);
@@ -138,7 +131,6 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       const updatedUser = { ...user, location };
       setUser(updatedUser);
       
-      // Update in both storage locations to be safe
       if (localStorage.getItem('windowsworld_user')) {
         localStorage.setItem('windowsworld_user', JSON.stringify(updatedUser));
       }
@@ -156,7 +148,6 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       };
       setUser(updatedUser);
       
-      // Update in both storage locations
       if (localStorage.getItem('windowsworld_user')) {
         localStorage.setItem('windowsworld_user', JSON.stringify(updatedUser));
       }
@@ -181,7 +172,6 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       };
       setUser(updatedUser);
       
-      // Update in both storage locations
       if (localStorage.getItem('windowsworld_user')) {
         localStorage.setItem('windowsworld_user', JSON.stringify(updatedUser));
       }
@@ -199,27 +189,16 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       return false;
     }
 
-    try {
-      // In a real app, this would be an API call to a backend service
-      console.log(`SIMULATED EMAIL ALERT to ${user.email || 'windowsworldcartoon@gmail.com'}`);
-      console.log(`Subject: WEATHER ALERT: ${alertInfo.event}`);
-      console.log(`Body: ${alertInfo.description}`);
-      
-      // Simulate offline functionality by storing in localStorage
-      const alertsToSend = JSON.parse(localStorage.getItem('pending_weather_alerts') || '[]');
-      alertsToSend.push({
-        recipient: user.email,
-        event: alertInfo.event,
-        description: alertInfo.description,
-        timestamp: new Date().toISOString()
-      });
-      localStorage.setItem('pending_weather_alerts', JSON.stringify(alertsToSend));
-      
-      return true;
-    } catch (error) {
-      console.error('Failed to send alert email:', error);
+    return await sendEmailAlert(alertInfo, user.email);
+  };
+
+  const sendTestEmailAlert = async (): Promise<boolean> => {
+    if (!user) {
+      console.log('No user logged in');
       return false;
     }
+    
+    return await sendTestEmail(user.email);
   };
 
   return (
@@ -234,7 +213,8 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         updateUserLocation,
         toggleSubscription,
         updateAlertPreferences,
-        sendAlertEmail
+        sendAlertEmail,
+        sendTestEmailAlert
       }}
     >
       {children}

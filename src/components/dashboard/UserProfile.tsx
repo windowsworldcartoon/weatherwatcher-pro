@@ -9,7 +9,7 @@ import { Mail, Bell, User, BellOff } from 'lucide-react';
 import { toast } from 'sonner';
 
 const UserProfile = () => {
-  const { user, toggleSubscription, updateAlertPreferences } = useAuth();
+  const { user, toggleSubscription, updateAlertPreferences, sendTestEmailAlert } = useAuth();
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   if (!user) {
@@ -26,11 +26,14 @@ const UserProfile = () => {
   const handleTestEmail = async () => {
     setIsSubmitting(true);
     try {
-      // Simulate sending a test email
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      toast.success('Test email sent!', {
-        description: `A test email has been sent to ${user.email || 'windowsworldcartoon@gmail.com'}`
-      });
+      const success = await sendTestEmailAlert();
+      if (success) {
+        toast.success('Test email sent!', {
+          description: `A test email has been sent to ${user.email || 'windowsworldcartoon@gmail.com'}`
+        });
+      } else {
+        toast.error('Failed to send test email');
+      }
     } catch (error) {
       toast.error('Failed to send test email');
     } finally {
