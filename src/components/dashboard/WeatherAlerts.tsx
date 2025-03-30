@@ -1,17 +1,63 @@
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { AlertTriangle, ArrowRight, Siren, Tornado } from 'lucide-react';
+import { AlertTriangle, ArrowRight, Siren, Tornado, Mail } from 'lucide-react';
 import { WeatherData } from '@/services/weather';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { useAuth } from '@/contexts/AuthContext';
+import { toast } from 'sonner';
 
 interface WeatherAlertsProps {
   alerts: WeatherData['alerts'];
 }
 
 const WeatherAlerts: React.FC<WeatherAlertsProps> = ({ alerts }) => {
+  const { user, sendAlertEmail } = useAuth();
+  
+  useEffect(() => {
+    // Check for tornado warnings and automatically send email alerts
+    const tornadoWarning = alerts?.find(alert => 
+      alert.event.toLowerCase().includes('tornado') && 
+      alert.event.toLowerCase().includes('warning')
+    );
+    
+    if (tornadoWarning && user?.alertPreferences?.email) {
+      sendAlertEmail({
+        event: tornadoWarning.event,
+        description: tornadoWarning.description
+      }).then(success => {
+        if (success) {
+          toast.success('Tornado warning email alert sent!', {
+            description: 'Details have been sent to your email address.'
+          });
+        }
+      });
+    }
+    
+    // Check if there are any other severe alerts to send
+    const severeAlerts = alerts?.filter(alert => 
+      alert.severity.toLowerCase() === 'severe' || 
+      alert.severity.toLowerCase() === 'extreme'
+    );
+    
+    if (severeAlerts?.length && user?.alertPreferences?.email && !tornadoWarning) {
+      severeAlerts.forEach(alert => {
+        sendAlertEmail({
+          event: alert.event,
+          description: alert.description
+        });
+      });
+      
+      if (severeAlerts.length > 0) {
+        toast.info(`${severeAlerts.length} weather alert(s) sent to your email`, {
+          description: 'Check your inbox for details.'
+        });
+      }
+    }
+  }, [alerts, user, sendAlertEmail]);
+
   if (!alerts || alerts.length === 0) return null;
 
   const severityColor = (severity: string) => {
@@ -37,6 +83,25 @@ const WeatherAlerts: React.FC<WeatherAlertsProps> = ({ alerts }) => {
     alert.event.toLowerCase().includes('watch')
   );
 
+  const handleSendAlert = (alert: any) => {
+    if (user?.alertPreferences?.email) {
+      sendAlertEmail({
+        event: alert.event,
+        description: alert.description
+      }).then(success => {
+        if (success) {
+          toast.success('Alert email sent!', {
+            description: 'Weather alert details have been sent to your email.'
+          });
+        }
+      });
+    } else {
+      toast.error('Email alerts not enabled', {
+        description: 'Enable email alerts in your profile settings.'
+      });
+    }
+  };
+
   return (
     <section className="space-y-4 animate-slide-up">
       {tornadoWarning && (
@@ -58,11 +123,21 @@ const WeatherAlerts: React.FC<WeatherAlertsProps> = ({ alerts }) => {
                     <div><span className="font-medium">Start:</span> {new Date(tornadoWarning.onset).toLocaleString()}</div>
                     <div><span className="font-medium">End:</span> {new Date(tornadoWarning.ends).toLocaleString()}</div>
                   </div>
-                  <Link to="/severe-weather">
-                    <Button variant="destructive" size="sm" className="mt-2">
-                      View Full Details <ArrowRight className="ml-1 h-4 w-4" />
+                  <div className="flex gap-2 mt-2">
+                    <Link to="/severe-weather">
+                      <Button variant="destructive" size="sm">
+                        View Full Details <ArrowRight className="ml-1 h-4 w-4" />
+                      </Button>
+                    </Link>
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      className="border-red-500 text-red-700"
+                      onClick={() => handleSendAlert(tornadoWarning)}
+                    >
+                      <Mail className="mr-1 h-4 w-4" /> Email Alert
                     </Button>
-                  </Link>
+                  </div>
                 </div>
               </div>
             </div>
@@ -81,11 +156,21 @@ const WeatherAlerts: React.FC<WeatherAlertsProps> = ({ alerts }) => {
                 <div className="text-xs text-orange-700">
                   <span className="font-medium">Valid until:</span> {new Date(tornadoWatch.ends).toLocaleString()}
                 </div>
-                <Link to="/severe-weather">
-                  <Button variant="outline" size="sm" className="border-orange-500 text-orange-700 hover:bg-orange-100">
-                    Details <ArrowRight className="ml-1 h-4 w-4" />
+                <div className="flex gap-2">
+                  <Link to="/severe-weather">
+                    <Button variant="outline" size="sm" className="border-orange-500 text-orange-700 hover:bg-orange-100">
+                      Details <ArrowRight className="ml-1 h-4 w-4" />
+                    </Button>
+                  </Link>
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    className="border-orange-500 text-orange-700 hover:bg-orange-100"
+                    onClick={() => handleSendAlert(tornadoWatch)}
+                  >
+                    <Mail className="mr-1 h-4 w-4" /> Email
                   </Button>
-                </Link>
+                </div>
               </div>
             </div>
           </div>
@@ -117,13 +202,20 @@ const WeatherAlerts: React.FC<WeatherAlertsProps> = ({ alerts }) => {
               <span className="font-medium">Severity:</span> {alert.severity} • 
               <span className="font-medium"> Urgency:</span> {alert.urgency}
             </div>
-            {alerts.length === 1 && (
+            <div className="flex gap-2 mt-2">
               <Link to="/severe-weather">
-                <Button variant="outline" size="sm" className="mt-2">
+                <Button variant="outline" size="sm">
                   Show More <ArrowRight className="ml-1 h-4 w-4" />
                 </Button>
               </Link>
-            )}
+              <Button 
+                variant="outline" 
+                size="sm"
+                onClick={() => handleSendAlert(alert)}
+              >
+                <Mail className="mr-1 h-4 w-4" /> Email Alert
+              </Button>
+            </div>
           </AlertDescription>
         </Alert>
       ))}

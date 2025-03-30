@@ -7,6 +7,11 @@ type User = {
   email: string;
   name?: string;
   location?: string;
+  isSubscribed?: boolean;
+  alertPreferences?: {
+    email: boolean;
+    emailAddress?: string;
+  };
 };
 
 interface AuthContextType {
@@ -17,6 +22,9 @@ interface AuthContextType {
   signup: (email: string, password: string, name: string) => Promise<boolean>;
   logout: () => void;
   updateUserLocation: (location: string) => void;
+  toggleSubscription: () => void;
+  updateAlertPreferences: (preferences: User['alertPreferences']) => void;
+  sendAlertEmail: (alertInfo: { event: string; description: string }) => Promise<boolean>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -57,7 +65,11 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       const newUser = {
         id: Math.random().toString(36).substring(2, 9),
         email,
-        location: 'New York, NY'
+        location: 'New York, NY',
+        isSubscribed: false,
+        alertPreferences: {
+          email: false
+        }
       };
       
       setUser(newUser);
@@ -93,7 +105,11 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         id: Math.random().toString(36).substring(2, 9),
         email,
         name,
-        location: 'New York, NY'
+        location: 'New York, NY',
+        isSubscribed: false,
+        alertPreferences: {
+          email: false
+        }
       };
       
       setUser(newUser);
@@ -132,6 +148,80 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     }
   };
 
+  const toggleSubscription = () => {
+    if (user) {
+      const updatedUser = { 
+        ...user, 
+        isSubscribed: !user.isSubscribed 
+      };
+      setUser(updatedUser);
+      
+      // Update in both storage locations
+      if (localStorage.getItem('windowsworld_user')) {
+        localStorage.setItem('windowsworld_user', JSON.stringify(updatedUser));
+      }
+      if (sessionStorage.getItem('windowsworld_user')) {
+        sessionStorage.setItem('windowsworld_user', JSON.stringify(updatedUser));
+      }
+      
+      toast.success(updatedUser.isSubscribed 
+        ? 'You are now subscribed to weather updates!' 
+        : 'You have unsubscribed from weather updates.');
+    }
+  };
+
+  const updateAlertPreferences = (preferences: User['alertPreferences']) => {
+    if (user) {
+      const updatedUser = { 
+        ...user, 
+        alertPreferences: {
+          ...user.alertPreferences,
+          ...preferences
+        }
+      };
+      setUser(updatedUser);
+      
+      // Update in both storage locations
+      if (localStorage.getItem('windowsworld_user')) {
+        localStorage.setItem('windowsworld_user', JSON.stringify(updatedUser));
+      }
+      if (sessionStorage.getItem('windowsworld_user')) {
+        sessionStorage.setItem('windowsworld_user', JSON.stringify(updatedUser));
+      }
+      
+      toast.success('Alert preferences updated successfully!');
+    }
+  };
+
+  const sendAlertEmail = async (alertInfo: { event: string; description: string }): Promise<boolean> => {
+    if (!user || !user.alertPreferences?.email) {
+      console.log('Email alerts not enabled for this user');
+      return false;
+    }
+
+    try {
+      // In a real app, this would be an API call to a backend service
+      console.log(`SIMULATED EMAIL ALERT to ${user.email || 'windowsworldcartoon@gmail.com'}`);
+      console.log(`Subject: WEATHER ALERT: ${alertInfo.event}`);
+      console.log(`Body: ${alertInfo.description}`);
+      
+      // Simulate offline functionality by storing in localStorage
+      const alertsToSend = JSON.parse(localStorage.getItem('pending_weather_alerts') || '[]');
+      alertsToSend.push({
+        recipient: user.email,
+        event: alertInfo.event,
+        description: alertInfo.description,
+        timestamp: new Date().toISOString()
+      });
+      localStorage.setItem('pending_weather_alerts', JSON.stringify(alertsToSend));
+      
+      return true;
+    } catch (error) {
+      console.error('Failed to send alert email:', error);
+      return false;
+    }
+  };
+
   return (
     <AuthContext.Provider
       value={{
@@ -141,7 +231,10 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         login,
         signup,
         logout,
-        updateUserLocation
+        updateUserLocation,
+        toggleSubscription,
+        updateAlertPreferences,
+        sendAlertEmail
       }}
     >
       {children}

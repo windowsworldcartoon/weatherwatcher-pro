@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { useAuth } from '@/contexts/AuthContext';
 import { Switch } from '@/components/ui/switch';
+import { Checkbox } from '@/components/ui/checkbox';
 
 interface AuthFormProps {
   mode: 'login' | 'signup';
@@ -17,7 +18,8 @@ const AuthForm: React.FC<AuthFormProps> = ({ mode }) => {
   const [password, setPassword] = useState('');
   const [name, setName] = useState('');
   const [rememberMe, setRememberMe] = useState(false);
-  const { login, signup, isLoading } = useAuth();
+  const [subscribeToAlerts, setSubscribeToAlerts] = useState(false);
+  const { login, signup, isLoading, updateAlertPreferences } = useAuth();
   const navigate = useNavigate();
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -29,6 +31,14 @@ const AuthForm: React.FC<AuthFormProps> = ({ mode }) => {
       success = await login(email, password, rememberMe);
     } else {
       success = await signup(email, password, name);
+      
+      // If signup successful and user opted in for alerts, update preferences
+      if (success && subscribeToAlerts) {
+        updateAlertPreferences({
+          email: true,
+          emailAddress: email
+        });
+      }
     }
     
     if (success) {
@@ -102,6 +112,19 @@ const AuthForm: React.FC<AuthFormProps> = ({ mode }) => {
                 onCheckedChange={setRememberMe} 
               />
               <Label htmlFor="remember-me" className="cursor-pointer">Stay logged in</Label>
+            </div>
+          )}
+          
+          {mode === 'signup' && (
+            <div className="flex items-center space-x-2">
+              <Checkbox 
+                id="subscribe" 
+                checked={subscribeToAlerts} 
+                onCheckedChange={(checked) => setSubscribeToAlerts(checked === true)}
+              />
+              <Label htmlFor="subscribe" className="cursor-pointer text-sm text-muted-foreground">
+                Subscribe to severe weather alerts via email (windowsworldcartoon@gmail.com)
+              </Label>
             </div>
           )}
           

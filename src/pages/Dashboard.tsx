@@ -15,6 +15,7 @@ import ForecastSection from '@/components/dashboard/ForecastSection';
 import DetailedInfo from '@/components/dashboard/DetailedInfo';
 import WeatherLoading from '@/components/dashboard/WeatherLoading';
 import WeatherMap from '@/components/dashboard/WeatherMap';
+import UserProfile from '@/components/dashboard/UserProfile';
 
 const DEFAULT_LOCATION = { lat: 0, lon: 0, name: "Loading location..." };
 
@@ -26,6 +27,7 @@ const Dashboard = () => {
   const [error, setError] = useState<string | null>(null);
   const [currentLocation, setCurrentLocation] = useState(DEFAULT_LOCATION);
   const [locationBlocked, setLocationBlocked] = useState(false);
+  const [showUserProfile, setShowUserProfile] = useState(false);
 
   useEffect(() => {
     if (!isAuthenticated) {
@@ -152,49 +154,75 @@ const Dashboard = () => {
     navigate('/');
   };
 
+  const toggleUserProfile = () => {
+    setShowUserProfile(!showUserProfile);
+  };
+
   return (
     <div className="min-h-screen flex flex-col bg-gradient-to-b from-white to-weather-light animate-fade-in">
-      <DashboardHeader userEmail={user?.email} onLogout={handleLogout} />
+      <DashboardHeader 
+        userEmail={user?.email} 
+        onLogout={handleLogout} 
+        onProfileClick={toggleUserProfile}
+      />
 
       <main className="flex-1 container py-8 max-w-6xl">
         <div className="space-y-8">
           <section className="animate-slide-down">
             <h1 className="text-3xl font-bold mb-4">Your Weather Dashboard</h1>
-            <LocationSearch onLocationSelect={handleLocationSelect} />
+            
+            {showUserProfile ? (
+              <div className="mb-8">
+                <UserProfile />
+                <Button 
+                  variant="ghost" 
+                  onClick={toggleUserProfile} 
+                  className="mt-4"
+                >
+                  Back to Weather
+                </Button>
+              </div>
+            ) : (
+              <LocationSearch onLocationSelect={handleLocationSelect} />
+            )}
           </section>
 
-          {isLoading && <WeatherLoading />}
-
-          {error && (
-            <Alert variant="destructive">
-              <AlertTriangle className="h-4 w-4" />
-              <AlertTitle>Error</AlertTitle>
-              <AlertDescription>{error}</AlertDescription>
-            </Alert>
-          )}
-
-          {!isLoading && !error && weatherData && (
+          {!showUserProfile && (
             <>
-              <CurrentWeather 
-                currentConditions={weatherData.currentConditions} 
-                location={weatherData.location} 
-              />
-              
-              <WeatherMap 
-                location={currentLocation} 
-                locationBlocked={locationBlocked} 
-              />
-              
-              <WeatherAlerts alerts={weatherData.alerts} />
-              
-              <ForecastSection 
-                forecast={weatherData.forecast} 
-                formatDay={formatDay} 
-              />
-              
-              <DetailedInfo 
-                detailedForecast={weatherData.currentConditions.detailedForecast} 
-              />
+              {isLoading && <WeatherLoading />}
+
+              {error && (
+                <Alert variant="destructive">
+                  <AlertTriangle className="h-4 w-4" />
+                  <AlertTitle>Error</AlertTitle>
+                  <AlertDescription>{error}</AlertDescription>
+                </Alert>
+              )}
+
+              {!isLoading && !error && weatherData && (
+                <>
+                  <CurrentWeather 
+                    currentConditions={weatherData.currentConditions} 
+                    location={weatherData.location} 
+                  />
+                  
+                  <WeatherMap 
+                    location={currentLocation} 
+                    locationBlocked={locationBlocked} 
+                  />
+                  
+                  <WeatherAlerts alerts={weatherData.alerts} />
+                  
+                  <ForecastSection 
+                    forecast={weatherData.forecast} 
+                    formatDay={formatDay} 
+                  />
+                  
+                  <DetailedInfo 
+                    detailedForecast={weatherData.currentConditions.detailedForecast} 
+                  />
+                </>
+              )}
             </>
           )}
         </div>
