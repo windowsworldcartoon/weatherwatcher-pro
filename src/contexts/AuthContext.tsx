@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { toast } from 'sonner';
 import { sendAlertEmail as sendEmailAlert, sendTestEmail, sendPendingAlerts } from '@/utils/emailSender';
@@ -54,10 +55,11 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     }
     setIsLoading(false);
     
+    // Try to send any pending alerts
     sendPendingAlerts().then(count => {
       if (count > 0) {
-        toast.success(`Sent ${count} pending weather alert(s)`, {
-          description: 'Alerts that were stored while you were offline have been sent.'
+        toast.success(`Processed ${count} pending weather alert(s)`, {
+          description: 'Alerts that were stored while you were offline have been processed.'
         });
       }
     });
@@ -197,7 +199,15 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       return false;
     }
 
-    return await sendEmailAlert(alertInfo, user.email);
+    const success = await sendEmailAlert(alertInfo, user.email);
+    
+    if (success) {
+      toast.success('Alert prepared', {
+        description: 'Alert has been saved and would be sent to your email in a production environment.'
+      });
+    }
+    
+    return success;
   };
 
   const sendTestEmailAlert = async (): Promise<boolean> => {

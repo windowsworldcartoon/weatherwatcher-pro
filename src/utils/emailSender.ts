@@ -5,7 +5,6 @@
  * Handles all email operations for the weather app, including
  * alert emails, notifications, and offline support.
  */
-import nodemailer from 'nodemailer';
 
 type AlertEmailData = {
   event: string;
@@ -14,17 +13,8 @@ type AlertEmailData = {
   timestamp?: string;
 };
 
-// Configure nodemailer transporter
-const transporter = nodemailer.createTransport({
-  service: 'gmail',
-  auth: {
-    user: 'windowsworldcartoon@gmail.com',
-    pass: 'app-password-here' // You'll need to use an app password for Gmail
-  }
-});
-
 /**
- * Sends a weather alert email to the user
+ * Simulates sending a weather alert email to the user
  * If offline, stores the alert in localStorage for later sending
  */
 export const sendAlertEmail = async (
@@ -44,35 +34,15 @@ export const sendAlertEmail = async (
   };
 
   try {
-    // Check if we're online
-    if (navigator.onLine) {
-      // Send the actual email
-      await transporter.sendMail({
-        from: '"Weather Alert Service" <windowsworldcartoon@gmail.com>',
-        to: recipient,
-        subject: `WEATHER ALERT: ${data.event}`,
-        html: `
-          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e0e0e0; border-radius: 5px;">
-            <h2 style="color: #d32f2f;">${data.event}</h2>
-            <p><strong>Time:</strong> ${new Date(emailPayload.timestamp).toLocaleString()}</p>
-            <div style="margin: 20px 0; padding: 15px; background-color: #fafafa; border-left: 4px solid #d32f2f; border-radius: 4px;">
-              ${data.description}
-            </div>
-            <p style="font-size: 12px; color: #757575; margin-top: 30px;">
-              This is an automated alert from the Weather App. Please do not reply to this email.
-            </p>
-          </div>
-        `
-      });
-      
-      console.log(`Email alert sent to ${recipient}`);
-    } else {
-      console.log('Currently offline. Storing email for later sending.');
-    }
+    // In browser environment, we'll simulate email sending
+    // and store the alert data
+    console.log(`[Email Alert] Would send to ${recipient}: ${data.event}`);
     
-    // Always store in localStorage for offline support
+    // Store in localStorage for offline support
     storeOfflineAlert(emailPayload);
     
+    // For a real implementation, you would need a backend service
+    // to actually send the emails
     return true;
   } catch (error) {
     console.error('Failed to send alert email:', error);
@@ -122,37 +92,17 @@ export const sendPendingAlerts = async (): Promise<number> => {
     return 0;
   }
   
-  let sentCount = 0;
-  const remainingAlerts = [];
+  // In a real implementation, this would send the emails
+  // For now, we'll just log and clear the queue
+  console.log(`[Email Alert] Would send ${pendingAlerts.length} pending alerts:`);
+  pendingAlerts.forEach((alert, index) => {
+    console.log(`[Email Alert ${index + 1}] To: ${alert.recipient}, Subject: ${alert.subject}`);
+  });
   
-  for (const alert of pendingAlerts) {
-    try {
-      await transporter.sendMail({
-        from: '"Weather Alert Service" <windowsworldcartoon@gmail.com>',
-        to: alert.recipient,
-        subject: alert.subject,
-        html: `
-          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e0e0e0; border-radius: 5px;">
-            <h2 style="color: #d32f2f;">${alert.event}</h2>
-            <p><strong>Time:</strong> ${new Date(alert.timestamp || '').toLocaleString()}</p>
-            <div style="margin: 20px 0; padding: 15px; background-color: #fafafa; border-left: 4px solid #d32f2f; border-radius: 4px;">
-              ${alert.description}
-            </div>
-            <p style="font-size: 12px; color: #757575; margin-top: 30px;">
-              This is an automated alert from the Weather App. Please do not reply to this email.
-            </p>
-          </div>
-        `
-      });
-      sentCount++;
-    } catch (error) {
-      console.error('Failed to send pending alert:', error);
-      remainingAlerts.push(alert);
-    }
-  }
+  // Clear the pending alerts
+  localStorage.setItem('pending_weather_alerts', JSON.stringify([]));
   
-  localStorage.setItem('pending_weather_alerts', JSON.stringify(remainingAlerts));
-  return sentCount;
+  return pendingAlerts.length;
 };
 
 /**
@@ -162,29 +112,10 @@ export const sendTestEmail = async (userEmail?: string): Promise<boolean> => {
   const recipient = userEmail || "windowsworldcartoon@gmail.com";
   
   try {
-    if (navigator.onLine) {
-      await transporter.sendMail({
-        from: '"Weather Alert Service" <windowsworldcartoon@gmail.com>',
-        to: recipient,
-        subject: 'Test Weather Alert',
-        html: `
-          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e0e0e0; border-radius: 5px;">
-            <h2 style="color: #2196f3;">Test Weather Alert</h2>
-            <p>This is a test email to verify your weather alert configuration is working correctly.</p>
-            <p>If you received this email, your weather alerts are properly configured.</p>
-            <p style="font-size: 12px; color: #757575; margin-top: 30px;">
-              This is an automated test from the Weather App. Please do not reply to this email.
-            </p>
-          </div>
-        `
-      });
-      
-      console.log(`Test email sent to ${recipient}`);
-    } else {
-      console.log('Currently offline. Test email could not be sent.');
-      return false;
-    }
+    // In browser environment, we'll simulate email sending
+    console.log(`[Test Email] Would send to ${recipient}`);
     
+    // For a real implementation, you would need a backend service
     return true;
   } catch (error) {
     console.error('Failed to send test email:', error);
@@ -197,7 +128,7 @@ if (typeof window !== 'undefined') {
   window.addEventListener('online', async () => {
     const sent = await sendPendingAlerts();
     if (sent > 0) {
-      console.log(`Successfully sent ${sent} pending alert(s) that were queued offline.`);
+      console.log(`Successfully processed ${sent} pending alert(s) that were queued offline.`);
     }
   });
 }
