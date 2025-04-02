@@ -35,14 +35,19 @@ export const sendAlertEmail = async (
 
   try {
     // In browser environment, we'll simulate email sending
-    // and store the alert data
     console.log(`[Email Alert] Would send to ${recipient}: ${data.event}`);
+    console.log(`Subject: ${emailPayload.subject}`);
+    console.log(`Content: ${data.description.substring(0, 100)}...`);
     
-    // Store in localStorage for offline support
-    storeOfflineAlert(emailPayload);
+    // If we're offline, store for later sending
+    if (!navigator.onLine) {
+      storeOfflineAlert(emailPayload);
+      return false;
+    }
     
-    // For a real implementation, you would need a backend service
-    // to actually send the emails
+    // For a real implementation, you would make an API call to a backend service
+    // that actually sends the emails with proper authentication
+    
     return true;
   } catch (error) {
     console.error('Failed to send alert email:', error);
@@ -92,7 +97,7 @@ export const sendPendingAlerts = async (): Promise<number> => {
     return 0;
   }
   
-  // In a real implementation, this would send the emails
+  // In a real implementation, this would send the emails via an API
   // For now, we'll just log and clear the queue
   console.log(`[Email Alert] Would send ${pendingAlerts.length} pending alerts:`);
   pendingAlerts.forEach((alert, index) => {
@@ -114,8 +119,16 @@ export const sendTestEmail = async (userEmail?: string): Promise<boolean> => {
   try {
     // In browser environment, we'll simulate email sending
     console.log(`[Test Email] Would send to ${recipient}`);
+    console.log(`Subject: Test Weather Alert Email`);
+    console.log(`Content: This is a test email to verify your weather alert configuration is working correctly.`);
     
-    // For a real implementation, you would need a backend service
+    // If we're offline, return false
+    if (!navigator.onLine) {
+      return false;
+    }
+    
+    // For a real implementation, you would make an API call here
+    
     return true;
   } catch (error) {
     console.error('Failed to send test email:', error);
