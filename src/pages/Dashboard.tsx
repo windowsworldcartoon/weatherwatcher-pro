@@ -1,9 +1,8 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { Button } from '@/components/ui/button'; // Added missing Button import
+import { Button } from '@/components/ui/button';
 import { weatherService, WeatherData } from '@/services/weather';
 import { AlertTriangle } from 'lucide-react';
 import { toast } from 'sonner';
@@ -25,6 +24,7 @@ const Dashboard = () => {
   const { user, isAuthenticated, logout, updateUserLocation } = useAuth();
   const navigate = useNavigate();
   const [weatherData, setWeatherData] = useState<WeatherData | null>(null);
+  const [lastFetch, setLastFetch] = useState<Date>(new Date());
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [currentLocation, setCurrentLocation] = useState(DEFAULT_LOCATION);
@@ -126,6 +126,7 @@ const Dashboard = () => {
     try {
       const data = await weatherService.getWeatherData(lat, lon);
       setWeatherData(data);
+      setLastFetch(new Date());
       
       if (data.alerts && data.alerts.length > 0) {
         const severeAlerts = data.alerts.filter(
@@ -158,6 +159,20 @@ const Dashboard = () => {
 
   const toggleUserProfile = () => {
     setShowUserProfile(!showUserProfile);
+  };
+
+  const handleReloadWeather = async () => {
+    if (currentLocation?.lat && currentLocation?.lon) {
+      setIsLoading(true);
+      setError(null);
+      try {
+        await fetchWeatherData(currentLocation.lat, currentLocation.lon);
+        toast.success('Weather reloaded!');
+      } catch (e) {
+        setError('Failed to reload weather.');
+      }
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -206,6 +221,8 @@ const Dashboard = () => {
                   <CurrentWeather 
                     currentConditions={weatherData.currentConditions} 
                     location={weatherData.location} 
+                    onReload={handleReloadWeather}
+                    lastFetch={lastFetch}
                   />
                   
                   <WeatherMap 
