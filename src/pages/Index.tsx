@@ -1,107 +1,115 @@
 
-import React, { useEffect } from 'react';
+import React from 'react';
+import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { useNavigate } from 'react-router-dom';
-import { useAuth } from '@/contexts/AuthContext';
-import { Sun, Cloud, CloudRain } from 'lucide-react';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { MapPin, Thermometer, Wind, CloudRain, ArrowRight } from 'lucide-react';
 
 const Index = () => {
-  const navigate = useNavigate();
-  const { isAuthenticated } = useAuth();
-
-  useEffect(() => {
-    if (isAuthenticated) {
-      navigate('/dashboard');
-    }
-  }, [isAuthenticated, navigate]);
-
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="min-h-screen bg-gradient-to-b from-blue-50 to-white">
       {/* Header */}
-      <header className="w-full py-4 px-6 flex justify-between items-center border-b">
-        <div className="flex items-center space-x-2">
-          <Sun className="h-6 w-6 text-weather-blue" />
-          <span className="font-bold text-xl">WindowsWorld Weather</span>
-        </div>
-        <div className="flex space-x-4">
-          <Button variant="ghost" onClick={() => navigate('/login')}>Sign In</Button>
-          <Button onClick={() => navigate('/signup')}>Sign Up</Button>
-        </div>
+      <header className="container mx-auto px-4 py-6">
+        <nav className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <img src="/lovable-uploads/f8e2f98d-a4c1-4b36-aea7-5c7f8b9aef45.png" alt="Weather Icon" className="h-8 w-8" />
+            <span className="text-xl font-bold text-gray-900">WindowsWorld Weather</span>
+          </div>
+          <div className="flex items-center gap-4">
+            <Link to="/auth">
+              <Button variant="outline">Sign In</Button>
+            </Link>
+            <Link to="/auth">
+              <Button>Get Started</Button>
+            </Link>
+          </div>
+        </nav>
       </header>
 
       {/* Hero Section */}
-      <section className="flex-1 flex flex-col items-center justify-center p-8 animate-fade-in">
-        <div className="absolute opacity-10 -z-10">
-          <div className="relative">
-            <Cloud className="text-weather-blue w-64 h-64 absolute -top-32 -left-96" />
-            <CloudRain className="text-weather-blue w-48 h-48 absolute top-32 left-64" />
-            <Sun className="text-weather-blue w-72 h-72 absolute -top-48 -right-48" />
+      <main className="container mx-auto px-4 py-16">
+        <div className="text-center max-w-4xl mx-auto">
+          <div className="mb-8">
+            <img src="/lovable-uploads/f8e2f98d-a4c1-4b36-aea7-5c7f8b9aef45.png" alt="Weather Icon" className="h-20 w-20 mx-auto mb-6" />
+            <h1 className="text-5xl font-bold text-gray-900 mb-6">
+              Your Personal Weather Dashboard
+            </h1>
+            <p className="text-xl text-gray-600 mb-8">
+              Get accurate, real-time weather updates with beautiful visualizations and personalized alerts.
+            </p>
+            <div className="flex items-center justify-center gap-4">
+              <Link to="/auth">
+                <Button size="lg" className="flex items-center gap-2">
+                  Start Tracking Weather
+                  <ArrowRight className="h-4 w-4" />
+                </Button>
+              </Link>
+            </div>
           </div>
         </div>
-        
-        <div className="max-w-3xl mx-auto text-center space-y-6">
-          <h1 className="text-5xl sm:text-6xl font-bold tracking-tight">
-            Real-time weather at your fingertips
-          </h1>
-          <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-            Get accurate weather forecasts, severe weather alerts, and personalized notifications 
-            for any location, all in one beautifully designed app.
-          </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center pt-6">
-            <Button size="lg" className="text-lg px-8" onClick={() => navigate('/signup')}>
-              Get Started
-            </Button>
-            <Button size="lg" variant="outline" className="text-lg px-8" onClick={() => navigate('/login')}>
-              Sign In
-            </Button>
-          </div>
-        </div>
-      </section>
 
-      {/* Features */}
-      <section className="py-16 px-6 bg-gradient-to-b from-white to-weather-light animate-slide-up">
-        <div className="max-w-6xl mx-auto">
-          <h2 className="text-3xl font-bold text-center mb-12">Weather data that works for you</h2>
-          
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            <div className="glass-card p-6 rounded-lg text-center space-y-4">
-              <div className="w-12 h-12 mx-auto bg-primary/10 rounded-full flex items-center justify-center">
-                <Sun className="h-6 w-6 text-weather-blue" />
-              </div>
-              <h3 className="text-xl font-semibold">Real-time Forecasts</h3>
-              <p className="text-muted-foreground">
-                Access up-to-the-minute weather data from the National Weather Service.
-              </p>
-            </div>
-            
-            <div className="glass-card p-6 rounded-lg text-center space-y-4">
-              <div className="w-12 h-12 mx-auto bg-primary/10 rounded-full flex items-center justify-center">
-                <CloudRain className="h-6 w-6 text-weather-blue" />
-              </div>
-              <h3 className="text-xl font-semibold">Severe Weather Alerts</h3>
-              <p className="text-muted-foreground">
-                Receive timely notifications about severe weather conditions in your area.
-              </p>
-            </div>
-            
-            <div className="glass-card p-6 rounded-lg text-center space-y-4">
-              <div className="w-12 h-12 mx-auto bg-primary/10 rounded-full flex items-center justify-center">
-                <Cloud className="h-6 w-6 text-weather-blue" />
-              </div>
-              <h3 className="text-xl font-semibold">Personalized Dashboard</h3>
-              <p className="text-muted-foreground">
-                Customize your weather dashboard to show the information that matters most to you.
-              </p>
-            </div>
-          </div>
-        </div>
-      </section>
+        {/* Features Grid */}
+        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 mt-16">
+          <Card className="text-center">
+            <CardHeader>
+              <MapPin className="h-8 w-8 text-blue-600 mx-auto mb-2" />
+              <CardTitle className="text-lg">Location-Based</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <CardDescription>
+                Automatic location detection or search for any city worldwide
+              </CardDescription>
+            </CardContent>
+          </Card>
 
-      {/* Footer */}
-      <footer className="py-8 px-6 border-t text-center text-sm text-muted-foreground">
-        <p>© {new Date().getFullYear()} WindowsWorld Weather. All rights reserved.</p>
-        <p className="mt-2">Powered by the National Weather Service API.</p>
-      </footer>
+          <Card className="text-center">
+            <CardHeader>
+              <Thermometer className="h-8 w-8 text-red-600 mx-auto mb-2" />
+              <CardTitle className="text-lg">Detailed Forecasts</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <CardDescription>
+                7-day forecasts with hourly breakdowns and temperature trends
+              </CardDescription>
+            </CardContent>
+          </Card>
+
+          <Card className="text-center">
+            <CardHeader>
+              <Wind className="h-8 w-8 text-green-600 mx-auto mb-2" />
+              <CardTitle className="text-lg">Wind & Conditions</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <CardDescription>
+                Real-time wind speed, direction, humidity, and atmospheric pressure
+              </CardDescription>
+            </CardContent>
+          </Card>
+
+          <Card className="text-center">
+            <CardHeader>
+              <CloudRain className="h-8 w-8 text-purple-600 mx-auto mb-2" />
+              <CardTitle className="text-lg">Weather Alerts</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <CardDescription>
+                Severe weather warnings and personalized notifications
+              </CardDescription>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* CTA Section */}
+        <div className="text-center mt-16 bg-blue-600 text-white rounded-lg p-8">
+          <h2 className="text-3xl font-bold mb-4">Ready to get started?</h2>
+          <p className="text-xl mb-6">Join thousands of users who trust WindowsWorld Weather for accurate forecasts.</p>
+          <Link to="/auth">
+            <Button variant="secondary" size="lg">
+              Create Free Account
+            </Button>
+          </Link>
+        </div>
+      </main>
     </div>
   );
 };

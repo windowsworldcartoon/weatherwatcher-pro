@@ -32,11 +32,7 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
     <header className="bg-white border-b shadow-sm animate-fade-in">
       <div className="container flex justify-between items-center h-16 max-w-6xl">
         <Link to="/" className="flex items-center gap-2">
-          <div className="bg-blue-600 text-white p-1.5 rounded">
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5">
-              <path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z" />
-            </svg>
-          </div>
+          <img src="/lovable-uploads/f8e2f98d-a4c1-4b36-aea7-5c7f8b9aef45.png" alt="Weather Icon" className="h-8 w-8" />
           <span className="font-semibold text-lg">Windows World Weather</span>
         </Link>
 
