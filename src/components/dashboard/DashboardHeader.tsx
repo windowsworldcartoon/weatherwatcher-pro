@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -11,6 +10,7 @@ import {
   DropdownMenuTrigger 
 } from '@/components/ui/dropdown-menu';
 import { LogOut, User, Bell } from 'lucide-react';
+import ThemeToggle from '@/components/ui/ThemeToggle';
 
 interface DashboardHeaderProps {
   userEmail?: string;
@@ -29,13 +29,12 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
   };
 
   return (
-    <header className="bg-white border-b shadow-sm animate-fade-in">
+    <header className="bg-white dark:bg-background border-b shadow-sm animate-fade-in transition-colors">
       <div className="container flex justify-between items-center h-16 max-w-6xl">
         <Link to="/" className="flex items-center gap-2">
           <img src="/lovable-uploads/f8e2f98d-a4c1-4b36-aea7-5c7f8b9aef45.png" alt="Weather Icon" className="h-8 w-8" />
           <span className="font-semibold text-lg">Windows World Weather</span>
         </Link>
-
         <div className="flex items-center gap-4">
           <nav className="hidden md:flex space-x-1">
             <Link to="/dashboard">
@@ -48,7 +47,7 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
               </Button>
             </Link>
           </nav>
-
+          <ThemeToggle />
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" className="relative rounded-full h-8 w-8 bg-primary/10">

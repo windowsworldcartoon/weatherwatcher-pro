@@ -1,7 +1,40 @@
 
+
 import React from 'react';
 import ForecastCard from '@/components/ui/forecast-card';
 import { WeatherData } from '@/services/weather';
+import { WiRain, WiThunderstorm, WiDaySunny, WiCloudy, WiSnow, WiDayCloudy, WiStrongWind, WiNightClear, WiNightCloudy, WiNightRain, WiHumidity, WiSmallCraftAdvisory } from 'weather-icons-react';
+
+function getWeatherIconForForecast(day: string, condition: string): JSX.Element {
+  const iconSize = 32;
+  const iconColor = "#0EA5E9";
+  if (day.toLowerCase() === 'tonight') {
+    if (condition.toLowerCase().includes('thunderstorm')) {
+      return <WiThunderstorm size={iconSize} color={iconColor} />;
+    } else if (condition.toLowerCase().includes('rain') || condition.toLowerCase().includes('shower')) {
+      return <WiNightRain size={iconSize} color={iconColor} />;
+    } else if (condition.toLowerCase().includes('cloud')) {
+      return <WiNightCloudy size={iconSize} color={iconColor} />;
+    } else {
+      return <WiNightClear size={iconSize} color={iconColor} />;
+    }
+  }
+  if (condition.toLowerCase().includes('thunderstorm')) {
+    return <WiThunderstorm size={iconSize} color={iconColor} />;
+  } else if (condition.toLowerCase().includes('rain') || condition.toLowerCase().includes('shower')) {
+    return <WiRain size={iconSize} color={iconColor} />;
+  } else if (condition.toLowerCase().includes('snow')) {
+    return <WiSnow size={iconSize} color={iconColor} />;
+  } else if (condition.toLowerCase().includes('cloud') && condition.toLowerCase().includes('sun')) {
+    return <WiDayCloudy size={iconSize} color={iconColor} />;
+  } else if (condition.toLowerCase().includes('cloud')) {
+    return <WiCloudy size={iconSize} color={iconColor} />;
+  } else if (condition.toLowerCase().includes('wind')) {
+    return <WiStrongWind size={iconSize} color={iconColor} />;
+  } else {
+    return <WiDaySunny size={iconSize} color={iconColor} />;
+  }
+}
 
 // Helper to extract % chance of precipitation from text
 function extractPrecipitation(str: string): number | undefined {
@@ -34,6 +67,7 @@ const ForecastSection: React.FC<ForecastSectionProps> = ({ forecast, formatDay }
           const precipitation = extractPrecipitation(period.detailedForecast || period.shortForecast);
           const humidity = extractHumidity(period.detailedForecast || period.shortForecast);
           const windSpeed = period.windSpeed ? period.windSpeed : undefined;
+          const weatherIcon = getWeatherIconForForecast(formatDay(period.name), period.shortForecast);
           return (
             <ForecastCard
               key={period.number}
@@ -45,6 +79,7 @@ const ForecastSection: React.FC<ForecastSectionProps> = ({ forecast, formatDay }
               precipitation={precipitation}
               humidity={humidity}
               windSpeed={windSpeed}
+              weatherIcon={weatherIcon}
             />
           )
         })}
@@ -54,4 +89,3 @@ const ForecastSection: React.FC<ForecastSectionProps> = ({ forecast, formatDay }
 };
 
 export default ForecastSection;
-

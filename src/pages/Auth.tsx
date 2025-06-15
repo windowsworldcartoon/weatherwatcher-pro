@@ -7,7 +7,6 @@ import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
 import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
 import { Github } from 'lucide-react';
-import LocationSearch from "@/components/ui/location-search";
 import ThemeToggle from "@/components/ui/ThemeToggle";
 
 const Auth = () => {
@@ -60,10 +59,7 @@ const Auth = () => {
         <span className="font-bold text-xl">WindowsWorld Weather</span>
       </div>
 
-      {/* Location Search UI */}
-      <div className="mx-auto w-full max-w-md px-2 pb-2">
-        <LocationSearch onLocationSelect={handleLocationSelect} className="mb-2" />
-      </div>
+      {/* Location input removed here */}
       
       <div className="flex-1 flex items-center justify-center p-6">
         <Card className="w-full max-w-md mx-auto glass-card animate-blur-in">
