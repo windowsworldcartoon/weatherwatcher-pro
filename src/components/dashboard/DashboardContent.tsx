@@ -1,8 +1,9 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { MapPin, Thermometer, Wind, Droplets } from 'lucide-react';
 import WeatherLoading from './WeatherLoading';
+import { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from '@/components/ui/accordion';
 
 interface DashboardContentProps {
   userLocation: string;
@@ -18,6 +19,9 @@ const DashboardContent: React.FC<DashboardContentProps> = ({ userLocation }) => 
     windSpeed: 8,
     windDirection: 'NW'
   };
+
+  // State for "Show More Info"
+  const [showMore, setShowMore] = useState(false);
 
   if (isLoading) {
     return <WeatherLoading />;
@@ -56,6 +60,24 @@ const DashboardContent: React.FC<DashboardContentProps> = ({ userLocation }) => 
             </div>
           </div>
         </CardContent>
+        {/* Show More Info Accordion */}
+        <Accordion type="single" collapsible className="border-t">
+          <AccordionItem value="more-info">
+            <AccordionTrigger className="px-6 py-4 font-medium text-blue-600 hover:underline">
+              {showMore ? 'Hide More Info' : 'Show More Info'}
+            </AccordionTrigger>
+            <AccordionContent>
+              <div className="px-6 pb-6 text-sm text-muted-foreground">
+                <p>
+                  <span className="font-semibold">Details:</span> The current weather is {weatherData.condition} with a temperature of {weatherData.temperature}°F. Humidity is at {weatherData.humidity}%. Winds are blowing {weatherData.windDirection} at {weatherData.windSpeed} mph.
+                </p>
+                <p className="mt-2">
+                  <span className="font-semibold">Additional information:</span> This demo "Show More Info" section can be expanded to include radar images, sunrise/sunset times, air quality, UV index, pollen, and more!
+                </p>
+              </div>
+            </AccordionContent>
+          </AccordionItem>
+        </Accordion>
       </Card>
 
       {/* Placeholder for additional weather components */}
@@ -89,3 +111,4 @@ const DashboardContent: React.FC<DashboardContentProps> = ({ userLocation }) => 
 };
 
 export default DashboardContent;
+
