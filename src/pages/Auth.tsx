@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
@@ -8,6 +7,8 @@ import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
 import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
 import { Github } from 'lucide-react';
+import LocationSearch from "@/components/ui/location-search";
+import ThemeToggle from "@/components/ui/ThemeToggle";
 
 const Auth = () => {
   const [isLogin, setIsLogin] = useState(true);
@@ -16,6 +17,14 @@ const Auth = () => {
   const [fullName, setFullName] = useState('');
   const { signIn, signUp, signInWithGoogle, signInWithGitHub, isLoading, user } = useSupabaseAuth();
   const navigate = useNavigate();
+
+  // Add a handler to catch location select event, 
+  // Here, you might want to store the selected location to user preferences or just display it.
+  // For demonstration, we'll just log it.
+  const handleLocationSelect = (latLon: { lat: number; lon: number; name: string }) => {
+    console.log("Selected location:", latLon);
+    // You may want to set this to state and use it later, e.g. on signup.
+  };
 
   useEffect(() => {
     if (user) {
@@ -42,10 +51,18 @@ const Auth = () => {
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-gradient-to-b from-white to-weather-light">
+    <div className="min-h-screen flex flex-col bg-gradient-to-b from-white to-weather-light dark:from-background dark:to-gray-900 relative">
+      {/* Theme toggle button */}
+      <ThemeToggle />
+
       <div className="flex items-center justify-center p-6 cursor-pointer" onClick={() => navigate('/')}>
         <img src="/lovable-uploads/f8e2f98d-a4c1-4b36-aea7-5c7f8b9aef45.png" alt="Weather Icon" className="h-8 w-8 mr-2" />
         <span className="font-bold text-xl">WindowsWorld Weather</span>
+      </div>
+
+      {/* Location Search UI */}
+      <div className="mx-auto w-full max-w-md px-2 pb-2">
+        <LocationSearch onLocationSelect={handleLocationSelect} className="mb-2" />
       </div>
       
       <div className="flex-1 flex items-center justify-center p-6">
