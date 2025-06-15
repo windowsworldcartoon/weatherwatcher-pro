@@ -1,7 +1,8 @@
 
 import React, { useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { useAuth } from '@/contexts/AuthContext';
+// Switch to new auth
+import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { AlertTriangle, ArrowLeft, Tornado, Siren } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -11,22 +12,25 @@ import { weatherService } from '@/services/weather';
 import { useQuery } from '@tanstack/react-query';
 
 const SevereWeather = () => {
-  const { user, isAuthenticated } = useAuth();
+  // Use new Supabase auth context
+  const { user, profile, isLoading } = useSupabaseAuth();
   const navigate = useNavigate();
 
   useEffect(() => {
-    if (!isAuthenticated) {
-      navigate('/login');
+    if (!user && !isLoading) {
+      navigate('/auth');
     }
-  }, [isAuthenticated, navigate]);
+  }, [user, isLoading, navigate]);
+
+  // Pick location from profile (or fallback, as in dashboard)
+  const userLocation = profile?.location || 'New York, NY';
 
   const fetchAlerts = async () => {
-    if (!user?.location) {
+    if (!userLocation) {
       throw new Error('No location set');
     }
-    
     try {
-      const locationData = await weatherService.searchLocationsByCity(user.location);
+      const locationData = await weatherService.searchLocationsByCity(userLocation);
       const weatherData = await weatherService.getWeatherData(locationData.lat, locationData.lon);
       return weatherData.alerts || [];
     } catch (error) {
@@ -35,10 +39,10 @@ const SevereWeather = () => {
     }
   };
 
-  const { data: alerts, isLoading, error } = useQuery({
-    queryKey: ['alerts', user?.location],
+  const { data: alerts, isLoading: isAlertsLoading, error } = useQuery({
+    queryKey: ['alerts', userLocation],
     queryFn: fetchAlerts,
-    enabled: !!user?.location && isAuthenticated
+    enabled: !!userLocation && !!user
   });
 
   const getSeverityClass = (severity: string, event: string) => {
@@ -49,8 +53,7 @@ const SevereWeather = () => {
         return 'bg-orange-50 border-orange-300';
       }
     }
-    
-    switch(severity.toLowerCase()) {
+    switch (severity.toLowerCase()) {
       case 'extreme':
         return 'bg-red-50 border-red-200';
       case 'severe':
@@ -61,15 +64,27 @@ const SevereWeather = () => {
         return 'bg-blue-50 border-blue-200';
     }
   };
-  
+
   const getAlertIcon = (event: string) => {
     if (event.toLowerCase().includes('tornado')) {
-      return event.toLowerCase().includes('warning') 
-        ? <Siren className="h-5 w-5 text-red-600 mt-1" /> 
+      return event.toLowerCase().includes('warning')
+        ? <Siren className="h-5 w-5 text-red-600 mt-1" />
         : <Tornado className="h-5 w-5 text-orange-600 mt-1" />;
     }
     return <AlertTriangle className="h-5 w-5 text-red-600 mt-1" />;
   };
+
+  // Loading spinner in case user/profile is not loaded yet
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-white to-weather-light">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-weather-blue mx-auto mb-4"></div>
+          <p>Loading...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-white to-weather-light animate-fade-in">
@@ -86,7 +101,7 @@ const SevereWeather = () => {
           </p>
         </div>
 
-        {isLoading && (
+        {isAlertsLoading && (
           <Card>
             <CardContent className="p-6">
               <div className="animate-pulse space-y-4">
@@ -140,11 +155,9 @@ const SevereWeather = () => {
                         </Button>
                       </CollapsibleTrigger>
                     </div>
-                    
                     <CollapsibleContent>
                       <div className="mt-4 pt-4 border-t border-gray-200">
                         <p className="whitespace-pre-line text-sm">{alert.description}</p>
-                        
                         <div className="mt-4 grid grid-cols-2 gap-2 text-xs">
                           <div>
                             <span className="font-medium">Severity: </span>
@@ -168,7 +181,7 @@ const SevereWeather = () => {
                   </div>
                 </Collapsible>
               ))}
-              
+
             {/* Show tornado watches next */}
             {alerts
               .filter(alert => alert.event.toLowerCase().includes('tornado') && alert.event.toLowerCase().includes('watch'))
@@ -189,11 +202,9 @@ const SevereWeather = () => {
                         </Button>
                       </CollapsibleTrigger>
                     </div>
-                    
                     <CollapsibleContent>
                       <div className="mt-4 pt-4 border-t border-gray-200">
                         <p className="whitespace-pre-line text-sm">{alert.description}</p>
-                        
                         <div className="mt-4 grid grid-cols-2 gap-2 text-xs">
                           <div>
                             <span className="font-medium">Severity: </span>
@@ -217,10 +228,10 @@ const SevereWeather = () => {
                   </div>
                 </Collapsible>
               ))}
-              
+
             {/* Show other alerts last */}
             {alerts
-              .filter(alert => !(alert.event.toLowerCase().includes('tornado') && 
+              .filter(alert => !(alert.event.toLowerCase().includes('tornado') &&
                 (alert.event.toLowerCase().includes('warning') || alert.event.toLowerCase().includes('watch'))))
               .map((alert, index) => (
                 <Collapsible key={alert.id || index} className={`border rounded-lg overflow-hidden ${getSeverityClass(alert.severity, alert.event)}`}>
@@ -239,11 +250,9 @@ const SevereWeather = () => {
                         </Button>
                       </CollapsibleTrigger>
                     </div>
-                    
                     <CollapsibleContent>
                       <div className="mt-4 pt-4 border-t border-gray-200">
                         <p className="whitespace-pre-line text-sm">{alert.description}</p>
-                        
                         <div className="mt-4 grid grid-cols-2 gap-2 text-xs">
                           <div>
                             <span className="font-medium">Severity: </span>
