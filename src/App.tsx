@@ -26,16 +26,8 @@ const App = () => (
             <Routes>
               <Route path="/" element={<Index />} />
               <Route path="/auth" element={<Auth />} />
-              <Route path="/dashboard" element={
-                <ProtectedRoute>
-                  <Dashboard />
-                </ProtectedRoute>
-              } />
-              <Route path="/severe-weather" element={
-                <ProtectedRoute>
-                  <SevereWeather />
-                </ProtectedRoute>
-              } />
+              <Route path="/dashboard" element={<Dashboard />} />
+              <Route path="/severe-weather" element={<SevereWeather />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </BrowserRouter>
