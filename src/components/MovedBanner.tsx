@@ -4,7 +4,7 @@ import { X } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 // You can customize the new URL and message below
-const MOVED_URL = "https://your-new-website.com";
+const MOVED_URL = "https://windowsworld-weather.web.app/";
 const LOCAL_STORAGE_KEY = "movedBannerDismissed";
 
 const MovedBanner: React.FC = () => {
